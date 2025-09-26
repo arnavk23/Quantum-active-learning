@@ -1,0 +1,32 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.venv/
+.env
+
+# Jupyter Notebooks
+.ipynb_checkpoints/
+
+# LaTeX
+*.aux
+*.log
+*.out
+*.toc
+*.pdf
+*.bbl
+*.blg
+
+# Data and results
+/data/*
+!/data/README.md
+/results/*
+!/results/README.md
+
+# VS Code
+.vscode/
+
+# OS files
+.DS_Store
+Thumbs.db
