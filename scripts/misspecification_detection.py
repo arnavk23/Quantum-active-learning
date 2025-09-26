@@ -4,7 +4,6 @@ Detect out-of-distribution (OOD) predictions using ensemble uncertainty and trig
 import pandas as pd
 import numpy as np
 import joblib
-import os
 
 DATA_PATH = "./data/mp_dft_data_clean.csv"
 MODEL_PATH = "./models/rf_surrogate_uq.pkl"

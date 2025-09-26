@@ -3,7 +3,6 @@ Extracts nsites, volume, density, density_atomic from the raw mp_dft_data.csv an
 """
 import pandas as pd
 import re
-import os
 
 RAW_PATH = "./data/mp_dft_data.csv"
 CLEAN_PATH = "./data/mp_dft_data_clean.csv"
@@ -18,7 +17,7 @@ def extract_value(row, key):
             val = match.group(2)
             try:
                 return float(val)
-            except:
+            except ValueError:
                 return None
     return None
 
@@ -40,7 +39,9 @@ def main():
     df_clean = pd.DataFrame(clean_data)
     df_clean = df_clean.dropna().drop_duplicates()
     df_clean.to_csv(CLEAN_PATH, index=False)
-    print(f"Saved cleaned data to {CLEAN_PATH} with {len(df_clean)} entries.")
+    print(
+        f"Saved cleaned data to {CLEAN_PATH} with {len(df_clean)} entries."
+    )
 
 if __name__ == "__main__":
     main()

@@ -79,6 +79,9 @@ def grover_demo():
     try:
         oracle = QuantumCircuit(2)
         oracle.cz(0, 1)
+        if 'GroverOperator' not in globals() or 'AmplificationProblem' not in globals() or 'Grover' not in globals():
+            print("Grover's algorithm classes not available.")
+            return None
         grover_op = GroverOperator(oracle)
         problem = AmplificationProblem(oracle=grover_op)
         grover = Grover()
@@ -275,7 +278,7 @@ def hybrid_ml_demo():
         import numpy as np
         from sklearn.linear_model import LogisticRegression
         from sklearn.model_selection import train_test_split
-        from sklearn.metrics import accuracy_score
+        from sklearn.metrics import accuracy_score, confusion_matrix, ConfusionMatrixDisplay
         import matplotlib.pyplot as plt
         # Generate noisy synthetic data
         np.random.seed(42)
@@ -298,13 +301,10 @@ def hybrid_ml_demo():
         X_quantum = np.array([quantum_feature(x[0]) for x in X]).reshape(-1, 1)
 
         # Classical feature (just X)
-        # This is the raw input, used for comparison with quantum feature
         X_classical = X
 
         # Train/test split
-        # Quantum feature split
         Xq_train, Xq_test, y_train, y_test = train_test_split(X_quantum, y_noisy, test_size=0.2, random_state=42)
-        # Classical feature split (same labels)
         Xc_train, Xc_test, _, _ = train_test_split(X_classical, y_noisy, test_size=0.2, random_state=42)
 
         # Train logistic regression on quantum features
@@ -321,14 +321,13 @@ def hybrid_ml_demo():
         print(f"Classical ML accuracy (classical feature): {acc_c:.3f}")
 
         # Visualization: feature scatter
-        # Compare quantum and classical feature distributions
-        plt.figure(figsize=(8,4))
-        plt.subplot(1,2,1)
+        plt.figure(figsize=(8, 4))
+        plt.subplot(1, 2, 1)
         plt.scatter(X_quantum, y_noisy, c=y_noisy, cmap='coolwarm', alpha=0.7)
         plt.title('Quantum Feature vs. Label')
         plt.xlabel('Quantum Feature (Z expectation)')
         plt.ylabel('Label')
-        plt.subplot(1,2,2)
+        plt.subplot(1, 2, 2)
         plt.scatter(X_classical, y_noisy, c=y_noisy, cmap='coolwarm', alpha=0.7)
         plt.title('Classical Feature vs. Label')
         plt.xlabel('Classical Feature (X)')
@@ -338,15 +337,13 @@ def hybrid_ml_demo():
         plt.close()
 
         # Error analysis: confusion matrices
-        # Show confusion matrices for quantum and classical classifiers
-        from sklearn.metrics import confusion_matrix, ConfusionMatrixDisplay
         cm_q = confusion_matrix(y_test, yq_pred)
         cm_c = confusion_matrix(y_test, yc_pred)
-        plt.figure(figsize=(10,4))
-        plt.subplot(1,2,1)
+        plt.figure(figsize=(10, 4))
+        plt.subplot(1, 2, 1)
         ConfusionMatrixDisplay(cm_q).plot(ax=plt.gca(), cmap='Blues')
         plt.title('Quantum Feature Confusion Matrix')
-        plt.subplot(1,2,2)
+        plt.subplot(1, 2, 2)
         ConfusionMatrixDisplay(cm_c).plot(ax=plt.gca(), cmap='Blues')
         plt.title('Classical Feature Confusion Matrix')
         plt.tight_layout()
@@ -354,7 +351,6 @@ def hybrid_ml_demo():
         plt.close()
 
         # Measurement distribution for quantum feature
-        # Show how quantum feature values are distributed
         plt.figure()
         plt.hist(X_quantum, bins=20, color='purple', alpha=0.7)
         plt.title('Distribution of Quantum Feature (Z expectation)')
@@ -362,60 +358,8 @@ def hybrid_ml_demo():
         plt.ylabel('Count')
         plt.savefig('./results/quantum_feature_distribution.png')
         plt.close()
-
-    # Add comments for reproducibility and educational value
-    # - Quantum feature is expectation value of PauliZ after encoding classical data into quantum state
-    # - Classical feature is raw input
-    # - Compare accuracy and confusion matrices
-    # - Visualize feature distributions
-    except Exception as e:
-        print(f"Hybrid ML demo failed: {e}")
-    print(f"Classical ML accuracy (classical feature): {acc_c:.3f}")
-    # Accuracy may be similar for this simple synthetic dataset, but quantum features can be useful for more complex data.
-
-    # Visualization: feature scatter
-    # Compare quantum and classical feature distributions
-    plt.figure(figsize=(8,4))
-    plt.subplot(1,2,1)
-    plt.scatter(X_quantum, y_noisy, c=y_noisy, cmap='coolwarm', alpha=0.7)
-    plt.title('Quantum Feature vs. Label')
-    plt.xlabel('Quantum Feature (Z expectation)')
-    plt.ylabel('Label')
-    plt.subplot(1,2,2)
-    plt.scatter(X_classical, y_noisy, c=y_noisy, cmap='coolwarm', alpha=0.7)
-    plt.title('Classical Feature vs. Label')
-    plt.xlabel('Classical Feature (X)')
-    plt.ylabel('Label')
-    plt.tight_layout()
-    plt.savefig('./results/quantum_vs_classical_feature_scatter.png')
-    plt.close()
-
-    # Error analysis: confusion matrices
-    # Show confusion matrices for quantum and classical classifiers
-    from sklearn.metrics import confusion_matrix, ConfusionMatrixDisplay
-    cm_q = confusion_matrix(y_test, yq_pred)
-    cm_c = confusion_matrix(y_test, yc_pred)
-    plt.figure(figsize=(10,4))
-    plt.subplot(1,2,1)
-    ConfusionMatrixDisplay(cm_q).plot(ax=plt.gca(), cmap='Blues')
-    plt.title('Quantum Feature Confusion Matrix')
-    plt.subplot(1,2,2)
-    ConfusionMatrixDisplay(cm_c).plot(ax=plt.gca(), cmap='Blues')
-    plt.title('Classical Feature Confusion Matrix')
-    plt.tight_layout()
-    plt.savefig('./results/quantum_vs_classical_confusion_matrix.png')
-    plt.close()
-
-    # Measurement distribution for quantum feature
-    # Show how quantum feature values are distributed
-    plt.figure()
-    plt.hist(X_quantum, bins=20, color='purple', alpha=0.7)
-    plt.title('Distribution of Quantum Feature (Z expectation)')
-    plt.xlabel('Quantum Feature Value')
-    plt.ylabel('Count')
-    plt.savefig('./results/quantum_feature_distribution.png')
-    plt.close()
-  
+    except Exception as exc:
+        print(f"Hybrid ML demo failed: {exc}")
 if __name__ == "__main__":
     print("Quantum Computing Demo for Surrogate Modeling (Advanced)")
     quantum_circuit_basics()

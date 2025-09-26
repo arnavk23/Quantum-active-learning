@@ -2,12 +2,13 @@
 Train a Random Forest surrogate model and estimate prediction uncertainty using ensemble variance.
 """
 import pandas as pd
+import numpy as np
+import joblib
 from sklearn.model_selection import train_test_split
 from sklearn.ensemble import RandomForestRegressor
 from sklearn.metrics import mean_absolute_error, r2_score
-import numpy as np
-import joblib
-import os
+import matplotlib.pyplot as plt
+import seaborn as sns
 
 DATA_PATH = "./data/mp_dft_data_clean.csv"
 MODEL_PATH = "./models/rf_surrogate_uq.pkl"
@@ -51,7 +52,7 @@ import seaborn as sns
 
 # 1. Histogram of prediction errors
 errors = np.abs(y_test - y_pred_mean)
-plt.figure(figsize=(6,4))
+plt.figure(figsize=(6, 4))
 sns.histplot(errors, bins=30, kde=True)
 plt.title('Histogram of Prediction Errors')
 plt.xlabel('Absolute Error')
@@ -61,7 +62,7 @@ plt.savefig('./results/prediction_error_hist_uq.png')
 plt.close()
 
 # 2. True vs Predicted scatter plot
-plt.figure(figsize=(6,6))
+plt.figure(figsize=(6, 6))
 plt.scatter(y_test, y_pred_mean, alpha=0.5)
 plt.plot([y_test.min(), y_test.max()], [y_test.min(), y_test.max()], 'r--')
 plt.xlabel('True Values')
@@ -72,7 +73,7 @@ plt.savefig('./results/true_vs_pred_scatter_uq.png')
 plt.close()
 
 # 3. Uncertainty histogram
-plt.figure(figsize=(6,4))
+plt.figure(figsize=(6, 4))
 sns.histplot(y_pred_std, bins=30, kde=True)
 plt.title('Histogram of Prediction Uncertainty (std)')
 plt.xlabel('Predicted Std')

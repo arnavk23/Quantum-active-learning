@@ -1,3 +1,4 @@
+
 from mp_api.client import MPRester
 import pandas as pd
 import os
@@ -11,7 +12,10 @@ def main():
     with MPRester(API_KEY) as mpr:
         results = mpr.materials.search(
             elements=["Li", "Fe", "O"],
-            fields=["material_id", "composition", "structure", "nsites", "volume", "density", "density_atomic"]
+            fields=[
+                "material_id", "composition", "structure", "nsites",
+                "volume", "density", "density_atomic"
+            ]
         )
     df = pd.DataFrame(results)
     print("Columns in DataFrame:", df.columns)

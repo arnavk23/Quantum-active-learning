@@ -5,7 +5,6 @@ import pandas as pd
 import numpy as np
 import joblib
 from sklearn.metrics import mean_absolute_error, r2_score
-import os
 
 DATA_PATH = "./data/mp_dft_data_clean.csv"
 OOD_PATH = "./results/ood_flags.csv"
