@@ -36,8 +36,8 @@
 \author{
 Arnav Kapoor\thanks{Corresponding author: arnav.kapoor@institution.edu} \\
 Department of Quantum Computing and Materials Science \\
-Institution Name \\
-City, Country
+Computer Science, Electrical Engineering and Computer Science \\
+Indian Institute of Science Education and Research, Bhopal, India
 }
 
 \date{\today}
@@ -119,19 +119,19 @@ For materials science specifically, quantum computing approaches have been explo
 
 Our quantum-enhanced active learning framework consists of three core components: (1) quantum state preparation for materials representation, (2) multi-observable uncertainty quantification, and (3) quantum-inspired selection strategies.
 
-\begin{figure*}[t]
+\begin{figure}[!t]
 \centering
-\begin{tikzpicture}[scale=0.9, every node/.style={transform shape}]
-% Framework overview
-\node[draw, rectangle, fill=blue!20, minimum width=3cm, minimum height=1.5cm] (materials) at (0,0) {Candidate\\Materials\\Database};
+\begin{tikzpicture}[scale=0.45, every node/.style={transform shape}]
+% Framework overview - Significantly reduced size
+\node[draw, rectangle, fill=blue!20, minimum width=2cm, minimum height=0.8cm] (materials) at (0,0) {\footnotesize Candidate\\Materials};
 
-\node[draw, rectangle, fill=green!20, minimum width=3cm, minimum height=1.5cm] (quantum) at (5,0) {Quantum State\\Preparation\\$|\psi_i\rangle$};
+\node[draw, rectangle, fill=green!20, minimum width=2cm, minimum height=0.8cm] (quantum) at (3.5,0) {\footnotesize Quantum State\\$|\psi_i\rangle$};
 
-\node[draw, rectangle, fill=orange!20, minimum width=3cm, minimum height=1.5cm] (observables) at (10,0) {Multi-Observable\\Uncertainty\\Quantification};
+\node[draw, rectangle, fill=orange!20, minimum width=2cm, minimum height=0.8cm] (observables) at (7,0) {\footnotesize Multi-Observable\\Uncertainty};
 
-\node[draw, rectangle, fill=purple!20, minimum width=3cm, minimum height=1.5cm] (selection) at (5,-3) {Quantum-Enhanced\\Selection\\Strategy};
+\node[draw, rectangle, fill=purple!20, minimum width=2cm, minimum height=0.8cm] (selection) at (3.5,-2) {\footnotesize Quantum-Enhanced\\Selection};
 
-\node[draw, rectangle, fill=red!20, minimum width=3cm, minimum height=1.5cm] (experiments) at (0,-3) {Selected\\Experiments\\for Validation};
+\node[draw, rectangle, fill=red!20, minimum width=2cm, minimum height=0.8cm] (experiments) at (0,-2) {\footnotesize Selected\\Experiments};
 
 % Arrows
 \draw[thick, ->] (materials) -- (quantum);
@@ -140,18 +140,17 @@ Our quantum-enhanced active learning framework consists of three core components
 \draw[thick, ->] (selection) -- (experiments);
 
 % Feedback loop
-\draw[thick, ->, dashed] (experiments) -- ++(0,1.5) -- ++(-2.5,0) -- ++(0,1.5) -- (materials);
+\draw[thick, ->, dashed] (experiments) -- ++(0,1) -- ++(-1.75,0) -- ++(0,1) -- (materials);
 
 % Labels
-\node at (2.5,0.5) {Encode};
-\node at (7.5,0.5) {Measure};
-\node at (7.5,-1.5) {Select};
-\node at (2.5,-2.5) {Validate};
-\node[red] at (-1,-1.5) {Active Learning Loop};
+\node[font=\tiny] at (1.75,0.3) {Encode};
+\node[font=\tiny] at (5.25,0.3) {Measure};
+\node[font=\tiny] at (5.25,-1) {Select};
+\node[font=\tiny] at (1.75,-1.7) {Validate};
 \end{tikzpicture}
 \caption{Overview of the quantum-enhanced active learning framework. Materials are encoded as quantum states, multiple observables capture different uncertainty aspects, and quantum-inspired selection strategies identify the most informative experiments.}
 \label{fig:framework_overview}
-\end{figure*}
+\end{figure}
 
 \subsubsection{Quantum State Preparation}
 
@@ -179,17 +178,25 @@ The uncertainty for each observable is quantified using quantum variance:
 \sigma^2(\hat{O}_k) = \langle\psi|\hat{O}_k^2|\psi\rangle - \langle\psi|\hat{O}_k|\psi\rangle^2
 \end{equation}
 
-\begin{figure}[H]
+\begin{figure}[!t]
 \centering
 \begin{tikzpicture}[scale=0.8]
-% Multi-observable uncertainty visualization
 \begin{axis}[
-    width=10cm,
-    height=6cm,
+    width=9cm,
+    height=6.5cm,
     xlabel={Materials Feature Space},
     ylabel={Uncertainty Value},
     grid=major,
-    legend pos=north east,
+    legend style={
+        at={(0.02,0.98)},
+        anchor=north west,
+        font=\tiny,
+        cells={anchor=west},
+        fill=white,
+        fill opacity=0.8,
+        text opacity=1,
+        rounded corners=2pt
+    },
     xmin=0, xmax=10,
     ymin=0, ymax=1.2
 ]
@@ -307,7 +314,7 @@ The quantum-enhanced method demonstrates consistent superiority across both task
 
 Figure \ref{fig:learning_curves} shows the learning curves for all methods across active learning iterations. The quantum-enhanced approach demonstrates superior sample efficiency, reaching high performance with fewer experimental samples.
 
-\begin{figure*}[t]
+\begin{figure*}[!t]
 \centering
 \begin{subfigure}[b]{0.48\textwidth}
 \centering
@@ -416,16 +423,16 @@ Key observations from the learning curves:
 
 Figure \ref{fig:quantum_advantage} illustrates the quantum advantage over classical methods, showing consistent improvements across different comparison baselines.
 
-\begin{figure}[H]
+\begin{figure}[!b]
 \centering
 \begin{tikzpicture}
 \begin{axis}[
-    width=12cm,
-    height=6cm,
+    width=10cm,
+    height=5.5cm,
     xlabel={Classical Methods},
     ylabel={Quantum Advantage ($\Delta$R²)},
     ybar,
-    bar width=0.6cm,
+    bar width=0.5cm,
     grid=major,
     xticklabels={QBC, EI, Uncertainty, BADGE, MaxEnt, RF, CoreSet, Diversity, Random},
     xticklabel style={rotate=45, anchor=north east},
@@ -442,6 +449,8 @@ Figure \ref{fig:quantum_advantage} illustrates the quantum advantage over classi
 \caption{Quantum advantage analysis showing improvement in R² score over classical methods. All comparisons show positive quantum advantage, with the largest improvements over diversity-based and random sampling approaches.}
 \label{fig:quantum_advantage}
 \end{figure}
+
+\clearpage
 
 \subsection{Statistical Significance Analysis}
 
