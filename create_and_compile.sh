@@ -1,7 +1,4 @@
-#!/bin/bash
-
 echo "Creating and Compiling Quantum Active Learning Paper"
-echo "======================================================"
 
 # Create the fixed LaTeX file
 cat > quantum_paper_fixed.tex << 'EOF'
@@ -22,6 +19,8 @@ cat > quantum_paper_fixed.tex << 'EOF'
 \usepackage{pgfplots}
 \usepackage{float}
 \pgfplotsset{compat=1.17}
+% ORCiD package (local)
+\usepackage{orcidlink}
 
 % Page setup
 \usepackage[margin=1in]{geometry}
@@ -41,8 +40,7 @@ cat > quantum_paper_fixed.tex << 'EOF'
 \title{Quantum-Enhanced Active Learning for Accelerated Materials Discovery: A Novel Framework Combining Quantum Superposition and Multi-Observable Uncertainty Quantification}
 
 \author{
-Arnav Kapoor\thanks{Corresponding author: arnav.kapoor@institution.edu} \\
-Department of Quantum Computing and Materials Science \\
+Arnav Kapoor\orcidlink{0009-0007-9818-7908}\thanks{Corresponding author: arnavkapoor23@iiserb.ac.in} \\
 Computer Science, Electrical Engineering and Computer Science \\
 Indian Institute of Science Education and Research, Bhopal, India
 }
@@ -58,6 +56,13 @@ We present a novel quantum-enhanced active learning framework that leverages qua
 
 \textbf{Keywords:} Quantum Computing, Active Learning, Materials Discovery, Uncertainty Quantification, Machine Learning, Computational Chemistry
 \end{abstract}
+
+% Graphical abstract inserted after the abstract
+\begin{figure*}[!t]
+\centering
+\includegraphics[width=0.95\textwidth]{graphical_abstract.png}
+\caption*{Graphical abstract: Overview of the Quantum-Enhanced Active Learning workflow (Materials → Quantum States → Multi-Observable Uncertainty → Selection → Experiments).}
+\end{figure*}
 
 \section{Introduction}
 
@@ -638,12 +643,16 @@ if [ -f "quantum_paper_fixed.pdf" ]; then
     echo "   - 25-35% performance improvements ✓"
     echo ""
     
-    # Try to open the PDF
-    if command -v evince &> /dev/null; then
-        echo "Opening PDF..."
-        evince quantum_paper_fixed.pdf &
-    elif command -v xdg-open &> /dev/null; then
-        xdg-open quantum_paper_fixed.pdf &
+    # Try to open the PDF only if OPEN_PDF=1 (prevents automated builds from launching viewers)
+    if [ "${OPEN_PDF:-0}" = "1" ]; then
+        if command -v evince &> /dev/null; then
+            echo "Opening PDF..."
+            evince quantum_paper_fixed.pdf &
+        elif command -v xdg-open &> /dev/null; then
+            xdg-open quantum_paper_fixed.pdf &
+        fi
+    else
+        echo "PDF generated. To auto-open set OPEN_PDF=1 and re-run the script."
     fi
 else
     echo "PDF generation failed. Check errors above."
