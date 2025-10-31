@@ -11,259 +11,111 @@ This repository contains the complete implementation and research paper for "Qua
 - **35% reduction** in required experiments for materials discovery
 - **Statistically significant improvements** (p < 0.01) over 9 state-of-the-art methods
 - **First quantum-enhanced active learning framework** specifically designed for materials science
-- **Publication-ready research** suitable for top-tier journals (Nature, Physical Review X, etc.)
+# Quantum-Enhanced Active Learning for Materials Discovery
 
-### Technical Innovation
+This repository contains the LaTeX source, code, and supporting materials for the manuscript "Quantum-Enhanced Active Learning for Accelerated Materials Discovery." The project develops a quantum-inspired representation and a multi-observable uncertainty quantification strategy that improves sample efficiency in materials discovery workflows.
 
-- Novel **quantum state representation** for materials properties
-- **Multi-observable uncertainty quantification** capturing non-classical correlations
-- **Superposition-based exploration** for efficient materials space navigation
-- Comprehensive benchmarking against classical active learning methods
+Below you'll find a concise, practical README: how to build the paper, run the helper scripts, and reproduce the experiments at a high level.
 
-## Repository Structure
+## Repository contents (short)
 
-camp/
-├── quantum_paper_fixed.tex          # Complete LaTeX research paper
-├── quantum_paper_fixed.pdf          # Generated PDF publication
-├── create_and_compile.sh            # Paper compilation script
-├── compile_paper.sh                 # Alternative compilation script
-├── paper.tex                        # Original draft version
-├── README.md                        # This comprehensive guide
-└── [Additional research files]      # Supporting materials
+- `quantum_paper_fixed.tex` — LaTeX manuscript source.
+- `quantum_paper_fixed.pdf` — Compiled PDF (artifact).
+- `create_and_compile.sh`, `compile_paper.sh` — helper scripts to build the PDF.
+- `scripts/` — Python scripts for preprocessing, training, evaluation, and visualization.
+- `models/`, `results/` — (optional) model artifacts and experiment outputs.
+- `requirements.txt` — Python dependencies for the scripts.
+- `README.md` — this file.
 
-## Quick Start
+If you need a complete tree view, run `ls -R` from the repository root.
 
-### Prerequisites
+## Quick start — build the paper
+
+These steps assume a Debian/Ubuntu-like environment. If you use macOS or Windows, adapt the package installation accordingly.
+
+1) Install LaTeX (recommended: TeX Live full distribution):
 
 ```bash
-# Required LaTeX packages
-sudo apt-get install texlive-full
-sudo apt-get install texlive-latex-extra
-sudo apt-get install texlive-science
+sudo apt update
+sudo apt install -y texlive-full
 ```
 
-### Generate the Paper
+2) Build the PDF using the provided script:
 
 ```bash
-# Clone and navigate
-cd camp/
-
-# Make executable and run
 chmod +x create_and_compile.sh
 ./create_and_compile.sh
 ```
 
-### Expected Output
-
-```
-Compiling Quantum Active Learning Paper
-======================================
-LaTeX file created successfully!
-First compilation pass...
-Second compilation pass...
-PDF generated successfully!
-File: quantum_paper_fixed.pdf
-Size: 2.1M
-
-Paper Statistics:
-   - Title: Quantum-Enhanced Active Learning for Materials Discovery
-   - Pages: Professional multi-page format
-   - Figures: 4 high-quality visualizations
-   - Tables: 2 comprehensive benchmark tables
-   - References: 20 academic citations
-
-Perfect for Quantum Computer Engineer roles!
-   - Novel quantum algorithms ✓
-   - Materials science applications ✓
-   - Statistical rigor and benchmarking ✓
-   - 25-35% performance improvements ✓
-```
-
-## Research Methodology
-
-### Quantum Framework Components
-
-#### 1. Quantum State Preparation
-
-```latex
-|\psi_i⟩ = Σⱼ αᵢⱼ |fⱼ⟩
-```
-
-Materials encoded as quantum states in Hilbert space spanned by normalized features.
-
-#### 2. Multi-Observable Uncertainty
-
-```latex
-σ²(Ôₖ) = ⟨ψ|Ôₖ²|ψ⟩ - ⟨ψ|Ôₖ|ψ⟩²
-```
-
-Quantum variance across structural, electronic, and thermodynamic observables.
-
-#### 3. Selection Strategy
-
-```latex
-U_total = √(Σₖ |αₖ|² σ²(Ôₖ) + Σₖ≠ₗ αₖ* αₗ Cov(Ôₖ, Ôₗ))
-```
-
-Quantum superposition-based uncertainty combining multiple observables.
-
-### Benchmark Results
-
-| Method | Band Gap R² | Formation Energy R² | Avg Rank |
-|--------|-------------|---------------------|----------|
-| **Quantum-Enhanced** | **0.847 ± 0.023** | **0.792 ± 0.031** | **1.0** |
-| Query by Committee | 0.821 ± 0.034 | 0.774 ± 0.028 | 2.5 |
-| Expected Improvement | 0.819 ± 0.029 | 0.771 ± 0.025 | 3.0 |
-| Uncertainty Sampling | 0.812 ± 0.031 | 0.768 ± 0.033 | 3.5 |
-| BADGE | 0.808 ± 0.027 | 0.765 ± 0.029 | 4.5 |
-| Random Sampling | 0.743 ± 0.045 | 0.701 ± 0.042 | 10.0 |
-
-## Performance Highlights
-
-### Quantum Advantages
-
-- **3.2% improvement** over best classical method for band gap prediction
-- **2.3% improvement** over best classical method for formation energy
-- **Consistent superiority** across all evaluation metrics
-- **25-35% fewer experiments** required for target performance
-
-### Statistical Significance
-
-All improvements are statistically significant with **p < 0.05**, demonstrating robust quantum advantages over classical approaches.
-
-## Career Impact
-
-### Perfect for Quantum Computer Engineer Roles
-
-This research demonstrates exactly what leading quantum computing companies seek:
-
-#### Technical Expertise
-
-- **Quantum Algorithm Development**: Novel quantum-enhanced active learning
-- **Materials Science Applications**: Real-world quantum computing applications
-- **Statistical Rigor**: Comprehensive benchmarking and significance testing
-- **Performance Optimization**: Measurable 25-35% improvements
-
-#### Industry Relevance
-
-- **IBM Quantum**: Materials discovery applications
-- **Google Quantum AI**: Quantum machine learning algorithms
-- **Microsoft Azure Quantum**: Quantum-enhanced optimization
-- **IonQ**: Practical quantum computing applications
-- **Rigetti Computing**: Quantum algorithm development
-
-#### Research Quality
-
-- **Publication-ready**: Suitable for Nature, Physical Review X, IEEE Transactions
-- **Open-source implementation**: Complete reproducible framework
-- **Comprehensive validation**: Rigorous experimental protocol
-- **Novel contributions**: First quantum active learning for materials
-
-## Technical Implementation
-
-### Dependencies
+3) The script produces `quantum_paper_fixed.pdf` in the repository root. If you prefer manual steps:
 
 ```bash
-# LaTeX compilation
-texlive-full
-texlive-latex-extra
-texlive-science
-
-# Visualization packages
-tikz
-pgfplots
-circuitikz (optional)
-```
-
-### Build Process
-
-```bash
-# Automated compilation
-./create_and_compile.sh
-
-# Manual compilation
 pdflatex quantum_paper_fixed.tex
-pdflatex quantum_paper_fixed.tex  # Second pass for references
+pdflatex quantum_paper_fixed.tex  # run a second pass to resolve references
 ```
 
-### Quality Assurance
+Notes
+- The paper compiles with TeX Live; some systems may warn about pgfplots or font messages — these are typically non-fatal.
+- If you encounter a "Missing $ inserted" or grouping error, inspect the `.log` file; I have fixed known issues in the current source.
 
-- **Error-free compilation** on standard LaTeX distributions
-- **Professional formatting** with proper figure/table placement
-- **Complete bibliography** with 20 academic references
-- **Statistical analysis** with significance testing
-- **Reproducible results** with detailed methodology
+## Python environment and running scripts
 
-## Academic Submissions
+Several scripts under `scripts/` perform preprocessing, training, benchmarking, and plotting. To run them reproducibly:
 
-### Target Journals
+1) Create and activate a Python venv:
 
-#### Tier 1 (Impact Factor > 10)
+```bash
+python3 -m venv .venv
+source .venv/bin/activate
+pip install --upgrade pip
+pip install -r requirements.txt
+```
 
-- **Nature Computational Science** - Perfect fit for quantum/materials intersection
-- **Physical Review X** - Open access, high-impact physics journal
-- **Nature Communications** - Multidisciplinary quantum research
+2) Example: run a preprocessing or training script
 
-#### Tier 2 (Impact Factor 5-10)
+```bash
+python scripts/train_surrogate.py --help
+python scripts/download_preprocess_mp.py  # if you need to download dataset assets
+```
 
-- **npj Computational Materials** - Specialized materials discovery focus
-- **Quantum Machine Intelligence** - Quantum ML applications
-- **IEEE Transactions on Quantum Engineering** - Technical implementation focus
+Each script includes a docstring or `--help` output describing inputs and outputs. Many scripts support a small / sample mode so you can run a quick smoke test without large datasets.
 
-#### Conference Submissions
+If you want, I can create a `Dockerfile` or `devcontainer.json` to pin the environment and make runs fully reproducible.
 
-- **NeurIPS** - Machine learning methodology
-- **ICML** - Active learning innovations
-- **AAAI** - AI applications in science
-- **Quantum Information Processing** - Quantum computing applications
+## Generate the graphical abstract
 
-### Submission Checklist
+There is a helper script that produces a graphical abstract PNG (and attempts an SVG):
 
-- **Complete manuscript** (8-10 pages)
-- **High-quality figures** (4 professional visualizations)
-- **Comprehensive tables** (Benchmark results with statistics)
-- **Proper citations** (20 relevant references)
-- **Statistical validation** (Significance testing)
-- **Reproducible code** (Open-source implementation)
+```bash
+python scripts/generate_graphical_abstract.py
+```
 
-## Future Directions
+The script writes `graphical_abstract.png` to the repository root. If you prefer a true vector SVG I can convert or re-create the figure using an SVG library.
 
-### Research Extensions
+## Reproducibility and experiments
 
-- **Native quantum implementation** on NISQ devices
-- **Multi-property optimization** for complex materials design
-- **Federated quantum learning** across research institutions
-- **Hybrid classical-quantum algorithms** for large-scale problems
+- The experiments in the paper were run with fixed seeds and the evaluation protocol described in Section `sec:exp` of the manuscript. When available, model checkpoints, logs, and seeds are stored under `results/`.
+- `requirements.txt` lists the Python packages required by the scripts. Use a virtual environment or container to isolate runs.
+- For large datasets, the preprocessing scripts include deterministic imputation and standardization routines so reported results are reproducible.
 
-### Industry Applications
+If you need me to (a) run the experiments end to end, (b) prepare a minimal reproducible example, or (c) produce a Docker image, say which option and I'll proceed.
 
-- **Pharmaceutical drug discovery** with quantum-enhanced molecular design
-- **Energy materials** for batteries and solar cells
-- **Semiconductor design** for quantum computing hardware
-- **Catalyst development** for sustainable chemistry
+## Structure and important scripts
 
-### Commercial Applications
-For commercial use of the quantum algorithms and methodologies, please contact the author for licensing arrangements.
+- `create_and_compile.sh` — wrapper for LaTeX compilation (multi-pass, cleans aux files).
+- `scripts/download_preprocess_mp.py` — dataset download and preprocessing helper.
+- `scripts/train_surrogate.py` — trains surrogate models used in the active learning loop.
+- `scripts/evaluate_benchmark.py` — runs benchmark comparisons against baselines.
+- `scripts/generate_graphical_abstract.py` — creates the graphical abstract PNG/SVG.
 
-## Acknowledgments
+Open any script to see usage examples and flags.
 
-Special thanks to:
-- **Quantum computing community** for foundational algorithm development
-- **Materials science researchers** for domain expertise and validation
-- **Open-source software contributors** for essential tools and libraries
-- **Peer reviewers** for valuable feedback and suggestions
+## How to cite / contact
 
-## Repository Statistics
+If you use the methods or code here, please cite the manuscript once it is available. For questions, reproducibility requests, or collaboration, contact:
 
-### Impact Metrics
-- **Performance Improvement**: 35% reduction in experiments
-- **Statistical Significance**: p < 0.01 across all benchmarks
-- **Novel Contributions**: First quantum active learning for materials
-- **Academic Quality**: Publication-ready for top-tier journals
-- **Industry Relevance**: Perfect for quantum computer engineer roles
+Arnav Kapoor — arnavkapoor23@iiserb.ac.in
 
-### Technical Quality
-- **Research Quality**: Publication Ready
-- **Code Quality**: Production Ready
-- **Documentation**: Comprehensive
-- **License**: Academic Use
+## License
+
+This repository is provided for academic and research use. See `LICENSE` for details.
