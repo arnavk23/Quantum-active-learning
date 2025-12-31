@@ -5,9 +5,6 @@ Novel Research Contribution:
 - Quantum uncertainty quantification using parameterized quantum circuits
 - Classical-quantum hybrid approach for robust materials discovery
 - Efficient fallback methods for NISQ-era limitations
-
-Author: Research Team
-Institution: Quantum Materials Discovery Lab
 """
 
 import numpy as np
