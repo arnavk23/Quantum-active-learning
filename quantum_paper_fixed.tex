@@ -7,6 +7,7 @@
 \usepackage{textcomp}
 \usepackage{xcolor}
 \usepackage{booktabs}
+\usepackage{orcidlink}
 \usepackage{multirow}
 \usepackage{url}
 \usepackage{tikz}
@@ -19,13 +20,12 @@
 % IEEE style: Roman numerals for tables
 \renewcommand{\thetable}{\Roman{table}}
 
-\title{Quantum-Enhanced Active Learning for Accelerated Materials Discovery}
+\title{Quantum-Inspired Active Learning for Accelerated Materials Discovery}
 
 \author{
-\IEEEauthorblockN{Arnav Kapoor}
+\IEEEauthorblockN{Arnav Kapoor\orcidlink{0009-0007-9818-7908}}
 \IEEEauthorblockA{
-Indian Institute of Science Education and Research, Bhopal\\
-Bhopal, India\\
+Indian Institute of Science Education and Research Bhopal, India\\
 arnavkapoor23@iiserb.ac.in
 }
 }
@@ -34,48 +34,48 @@ arnavkapoor23@iiserb.ac.in
 \maketitle
 
 \begin{abstract}
-This paper develops a quantum-enhanced active learning framework for materials discovery by combining quantum-inspired state encoding with multi-observable uncertainty quantification. The approach derives uncertainty metrics by capturing coupled structure-property relationships. Evaluated on band gap and formation energy prediction tasks in five independent runs comparing nine baselines, the quantum-enhanced method consistently achieves a higher test R² and improved sample efficiency, reducing the experimental budget by 25-35\% (paired t-tests, $p<0.01$).
+This paper develops a quantum-inspired active learning framework for materials discovery by combining state encoding with multi-observable uncertainty quantification. The approach derives uncertainty metrics by capturing coupled structure-property relationships. Evaluated on band gap and formation energy prediction tasks in five independent runs comparing nine baselines, the quantum-inspired method consistently achieves a higher test $ \mathbb{R}^ 2 $ and improved sample efficiency, reducing the experimental budget by 25-35\% (paired t-tests, $p<0.01$).
 
 \textbf{Keywords:} quantum-inspired algorithms, active learning, materials discovery, uncertainty quantification, machine learning
 \end{abstract}
 
 \section{Introduction}
 
-Accelerating material discovery is critical to address energy storage and catalysis challenges. Active learning prioritizes informative experiments and reducing evaluations needed to identify promising candidates \cite{wang2023active, huang2024machine}.
+Materials discovery is limited by the cost of exploring large chemical and structural spaces. Accelerating material discovery is critical to address energy storage and catalysis challenges. Active learning emphasizes informative experiments and reducing evaluations needed to identify promising candidates \cite{wang2023active, huang2024machine}.
 
-Classical active learning relies on scalar uncertainty estimates that miss coupled phenomena in material systems. For instance, band gap and formation energy correlate through structural factors; selecting samples uncertain in one but certain in the other misses opportunities to reduce both simultaneously. This coupling problem is severe in multi-property design spaces \cite{wang2023active, ren2022accelerating}.
+Classical active learning depends on scalar uncertainty estimates that miss coupled phenomena in material systems. E.g., band gap and formation energy correlate through structural factors; selecting samples uncertain in one but certain in the other miss reducing both simultaneously \cite{wang2023active, ren2022accelerating}.
 
-Quantum mechanics offers a conceptual framework for coupled systems through superposition and entanglement. Quantum-inspired classical algorithms extract these principles—amplitude-based feature representations, multiple non-commuting observables, coupled uncertainty metrics—without requiring quantum hardware \cite{biamonte2017quantum}.
+Quantum mechanics offers a conceptual framework for coupled systems through superposition and entanglement. Quantum-inspired classical algorithms extract these principles of amplitude-based feature representations and coupled uncertainty metrics without requiring quantum hardware \cite{biamonte2017quantum}.
 
-This paper develops a quantum-enhanced active learning framework for materials discovery with: (i) quantum-inspired state encoding of materials features; (ii) multi-observable framework with cross-observable covariance computation; (iii) uncertainty aggregation combining variances and covariances; (iv) model-agnostic active learning loop; (v) validation on band gap/formation energy (5 trials, 9 baselines, $p<0.01$).
+This paper develops a quantum-inspired active learning framework for materials discovery with: (i) quantum-inspired state encoding of materials features; (ii) multi-observable framework with cross-observable covariance computation; (iii) uncertainty aggregation combining variances and covariances; (iv) model-agnostic active learning loop; (v) validation on band gap/formation energy.
 
 \section{Related Work}
 
-\textbf{Active Learning and Batch Selection:} Classical active learning for materials design commonly uses uncertainty sampling, Query-by-Committee, expected improvement, diversity/coverage heuristics, and core-set style batch selection \cite{wang2023active, huang2024machine, ren2022accelerating, settles2022active, kim2021task}. These strategies rely on scalar uncertainty, which can miss coupled structure-property effects.
+Active learning and batch selection: Classical active learning for materials design commonly uses uncertainty sampling, Query-by-Committee, expected improvement, diversity/coverage heuristics, and core-set style batch selection \cite{wang2023active, huang2024machine, ren2022accelerating, settles2022active, kim2021task}. These strategies rely on scalar uncertainty, which can miss coupled structure-property effects.
 
-\textbf{Uncertainty Estimation:} Bayesian approximations such as dropout and deep ensembles improve predictive uncertainty but still aggregate properties into single scores \cite{gal2016dropout, lakshminarayanan2017simple}. This approach instead couples multiple observables with covariance terms to retain cross-property structure.
+Uncertainty estimation: Bayesian approximations such as deep ensembles improve predictive uncertainty but still aggregate properties into single scores \cite{gal2016dropout, lakshminarayanan2017simple}. This approach instead couples multiple observables with covariance terms to retain cross-property structure.
 
-\textbf{Quantum-Inspired and Quantum Machine Learning:} Quantum-inspired classical methods use amplitude encodings and linear-algebraic speedups to represent complex correlations \cite{schuld2023machine, li2023quantum}. Variational and NISQ-era quantum machine learning advances motivate multi-observable formulations and structured uncertainty modeling \cite{cerezo2021variational, bharti2022nisq, abbas2021power, zhou2024quantum}. The method leverages these ideas while remaining hardware-agnostic.
+Quantum-Inspired and QML: Quantum-inspired classical methods use amplitude encodings and linear-algebraic speedups to represent complex correlations \cite{schuld2023machine, li2023quantum}. Variational and NISQ-era quantum machine learning advances motivate multi-observable formulations and structured uncertainty modeling \cite{cerezo2021variational, bharti2022nisq, abbas2021power, zhou2024quantum}.
 
 \section{Proposed Method}
 
-The proposed quantum-enhanced active learning framework integrates quantum-inspired representations with modern machine learning to improve materials discovery efficiency \cite{abbas2021power, bharti2022nisq, cerezo2021variational}. This section details the mathematical formulation, uncertainty quantification strategy, and algorithmic implementation.
+The proposed quantum-inspired active learning framework integrates quantum representations with modern machine learning to improve materials discovery efficiency \cite{abbas2021power, bharti2022nisq, cerezo2021variational}. This section details the mathematical formulation, uncertainty quantification and algorithmic implementation.
 
-\textbf{Quantum State Representation:} Each candidate material is encoded as a quantum state $|\psi_i\rangle$ in a $d$-dimensional Hilbert space spanned by materials features. The state preparation maps normalized feature vectors to amplitude representations:
+Each candidate material is encoded as a quantum state $|\psi_i\rangle$ in a $d$-dimensional Hilbert space spanned by material features. The state preparation maps normalized feature vectors to amplitude representations:
 \begin{equation}
 |\psi_i\rangle = \sum_{j=1}^{d} \alpha_{ij} |f_j\rangle,\label{eq:state}
 \end{equation}
-where $\{|f_j\rangle\}_{j=1}^d$ form an orthonormal basis corresponding to normalized features (atomic radius, electronegativity, formation energy, coordination number, etc.), and $\alpha_{ij} \in \mathbb{C}$ are complex amplitudes satisfying normalization $\sum_j |\alpha_{ij}|^2 = 1$. The amplitudes are constructed via a phase-encoding scheme: $\alpha_{ij} = \sqrt{p_{ij}} e^{i\phi_{ij}}$, where $p_{ij}$ are probabilities derived from normalized feature values and $\phi_{ij}$ encode feature correlations. This amplitude encoding (Eq.~\eqref{eq:state}) maps materials features into a normalized quantum-like representation \cite{schuld2023machine}.
+where $\{|f_j\rangle\}_{j=1}^d$ form an orthonormal basis corresponding to normalized features (atomic radius, electro-negativity, formation energy, coordination number, etc.), and $\alpha_{ij} \in \mathbb{C}$ are complex amplitudes satisfying normalization $\sum_j |\alpha_{ij}|^2 = 1$. The amplitudes are constructed with a phase-encoding scheme: $\alpha_{ij} = \sqrt{p_{ij}} e^{i\phi_{ij}}$, where $p_{ij}$ are probabilities derived from normalized feature values and $\phi_{ij}$ encode feature correlations. This amplitude encoding (Eq.~\eqref{eq:state}) maps material features in a normalized quantum-like representation \cite{schuld2023machine}.
 
-\textbf{Multi-Observable Framework:} To capture different facets of materials properties, three quantum observables are defined as Hermitian operators acting on the feature space \cite{mcardle2020quantum, bauer2023quantum}:
+To capture different facets of material properties, three quantum observables are defined as Hermitian operators acting on the feature space \cite{mcardle2020quantum, bauer2023quantum}:
 \begin{align}
 \hat{O}_{\text{structure}} &= \sum_{i,j} w_{ij}^{\text{struct}} |f_i\rangle\langle f_j|, \\
 \hat{O}_{\text{electronic}} &= \sum_{i,j} w_{ij}^{\text{elec}} |f_i\rangle\langle f_j|, \\
 \hat{O}_{\text{thermodynamic}} &= \sum_{i,j} w_{ij}^{\text{thermo}} |f_i\rangle\langle f_j|,
 \end{align}
-where $w_{ij}^{(\cdot)}$ are weights initialized from domain knowledge. Non-commuting observables ($[\hat{O}_k, \hat{O}_l] \neq 0$) capture quantum-like uncertainty relations. \textit{Construction guidelines:} (1) Identify 3-4 complementary property aspects; (2) Map to feature subsets (structural: geometry, electronic: band structure, thermodynamic: stability); (3) Initialize $w_{ij}$ as block-diagonal or full, normalized to unit spectral norm; (4) Ensure diversity—redundant types degrade performance $\sim$3\%; (5) Normalize variance scales; (6) Optionally tune via gradient descent.
+where $w_{ij}^{(\cdot)}$ are weights initialized from domain knowledge. Non-commuting observables ($[\hat{O}_k, \hat{O}_l] \neq 0$) capture quantum-like uncertainty relations. \textit{Construction guidelines:} (1) Identify 3-4 complementary property aspects; (2) Map to feature subsets (structural: geometry, electronic: band structure, thermodynamic: stability); (3) Initialize $w_{ij}$ as block-diagonal or full, normalized to unit spectral norm; (4) Ensure diversity—redundant types degrade performance $\sim$3\%; (5) Normalize variance scales; (6) Optionally tune with gradient descent.
 
-\textbf{Uncertainty Quantification:} For each observable $\hat{O}_k$, the quantum variance quantifies intrinsic uncertainty (Eq.~\eqref{eq:variance}):
+For each observable $\hat{O}_k$, the quantum variance quantifies intrinsic uncertainty (Eq.~\eqref{eq:variance}):
 \begin{equation}
 \sigma^2(\hat{O}_k) = \langle\psi|\hat{O}_k^2|\psi\rangle - \langle\psi|\hat{O}_k|\psi\rangle^2.\label{eq:variance}
 \end{equation}
@@ -83,23 +83,23 @@ Cross-observable covariances capture correlations (Eq.~\eqref{eq:covariance}):
 \begin{equation}
 \text{Cov}(\hat{O}_k,\hat{O}_l) = \langle\psi|\frac{\hat{O}_k\hat{O}_l + \hat{O}_l\hat{O}_k}{2}|\psi\rangle - \langle\psi|\hat{O}_k|\psi\rangle\langle\psi|\hat{O}_l|\psi\rangle.\label{eq:covariance}
 \end{equation}
-The symmetrized product ensures real-valued covariance. These terms encode coupled uncertainties across property domains.
+The symmetrized product confirms real-valued covariance. These terms encode coupled uncertainties across property domains.
 
-\textbf{Selection Strategy:} The total uncertainty aggregates individual variances and pairwise covariances using complex-valued combination coefficients \cite{gal2016dropout, lakshminarayanan2017simple}:
+The total uncertainty aggregates individual variances and pairwise covariances using complex-valued combination coefficients \cite{gal2016dropout, lakshminarayanan2017simple}:
 \begin{equation}
 U_{\text{total}} = \sqrt{\sum_k |\alpha_k|^2 \sigma^2(\hat{O}_k) + \sum_{k \neq l} \text{Re}(\alpha_k^* \alpha_l) \,\text{Cov}(\hat{O}_k,\hat{O}_l)},\label{eq:utotal}
 \end{equation}
-where $\alpha_k \in \mathbb{C}$ are complex coefficients tuning the relative contribution of each observable, and $\text{Re}(\cdot)$ denotes the real part. The coefficients $\{\alpha_k\}$ can be learned via cross-validation or set based on domain priorities (e.g., higher weight for electronic properties in band gap prediction). Candidates are ranked by $U_{\text{total}}$ (Eq.~\eqref{eq:utotal}) in descending order, and the top $b$ candidates form the query batch for experimental evaluation.
+where $\alpha_k \in \mathbb{C}$ are complex coefficients tuning the relative contribution of each observable, and $\text{Re}(\cdot)$ denotes the real part. The coefficients $\{\alpha_k\}$ can be learned with cross-validation or set based on domain priorities (e.g., higher weight for electronic properties in band gap prediction). Candidates are ranked by $U_{\text{total}}$ (Eq.~\eqref{eq:utotal}) in descending order, and the top $b$ candidates form the query batch for experimental evaluation.
 
-\textbf{Computational Complexity:} The framework computes expectations as $\langle\psi|\hat{O}|\psi\rangle = \sum_{ij} \alpha_i^* w_{ij} \alpha_j$, which requires $\mathcal{O}(d^2)$ operations per observable if the weight matrix $w$ is dense. For sparse or structured observables (e.g., banded or low-rank), this reduces to $\mathcal{O}(d)$ or $\mathcal{O}(rd)$ where $r$ is the rank. Computing uncertainties for $N$ candidates and $K$ observables thus requires $\mathcal{O}(NKd^2)$ in the worst case, but structured operators and efficient linear algebra (matrix-vector products, Cholesky decompositions) yield practical complexity $\mathcal{O}(NKd)$, making the approach scalable to thousands of candidates with typical feature dimensions $d \sim 50$-$200$.
+The framework computes expectations as $\langle\psi|\hat{O}|\psi\rangle = \sum_{ij} \alpha_i^* w_{ij} \alpha_j$, which requires $\mathcal{O}(d^2)$ operations per observable if the weight matrix $w$ is dense. For sparse or structured observables (e.g., banded or low-rank), this reduces to $\mathcal{O}(d)$ or $\mathcal{O}(rd)$ where $r$ is the rank. Computing uncertainties for $N$ candidates and $K$ observables thus requires $\mathcal{O}(NKd^2)$ in the worst case, but structured operators and efficient linear algebra (matrix-vector products, Cholesky decompositions) yield practical complexity $\mathcal{O}(NKd)$, making the approach scalable to thousands of candidates with typical feature dimensions $d \sim 50$-$200$.
 
 \begin{algorithm}
-\caption{Quantum-Enhanced Active Learning}
+\caption{quantum-inspired active learning}
 \label{alg:quantum_al}
 \begin{algorithmic}
 \STATE \textbf{Input:} Candidate materials $\{M_i\}_{i=1}^N$, initial labeled set $\mathcal{D}_0$, batch size $b$
 \STATE \textbf{Output:} Trained model $f$ and expanded labeled set $\mathcal{D}$
-\STATE Initialize quantum states $\{|\psi_i\rangle\}$ for all candidates via feature encoding
+\STATE Initialize quantum states $\{|\psi_i\rangle\}$ for all candidates with feature encoding
 \STATE Define quantum observables $\{\hat{O}_k\}_{k=1}^K$ with domain-informed weights
 \STATE Set combination coefficients $\{\alpha_k\}_{k=1}^K$
 \STATE $t \gets 0$, $\mathcal{D}_t \gets \mathcal{D}_0$
@@ -112,13 +112,13 @@ where $\alpha_k \in \mathbb{C}$ are complex coefficients tuning the relative con
 \STATE Compute variance $\sigma^2(\hat{O}_k) \gets \langle\psi_i|\hat{O}_k^2|\psi_i\rangle - \mu_k^2$
 \ENDFOR
 \FOR{each pair $(k,l)$ with $k \neq l$}
-\STATE Compute $\text{Cov}(\hat{O}_k,\hat{O}_l)$ via symmetrized product
+\STATE Compute $\text{Cov}(\hat{O}_k,\hat{O}_l)$ with symmetrized product
 \ENDFOR
 \STATE Aggregate total uncertainty: $U_{\text{total}}(M_i) \gets \sqrt{\sum_k |\alpha_k|^2 \sigma^2(\hat{O}_k) + \sum_{k \neq l} \text{Re}(\alpha_k^* \alpha_l) \text{Cov}(\hat{O}_k,\hat{O}_l)}$
 \ENDFOR
 \STATE Rank unlabeled candidates by $U_{\text{total}}$ in descending order
 \STATE Select top $b$ candidates: $\mathcal{B}_{t+1} \gets \{\text{top-}b\text{ by } U_{\text{total}}\}$
-\STATE Query labels for selected batch via experiments/simulations
+\STATE Query labels for selected batch with experiments/simulations
 \STATE Update labeled set: $\mathcal{D}_{t+1} \gets \mathcal{D}_t \cup \mathcal{B}_{t+1}$
 \STATE $t \gets t + 1$
 \UNTIL{convergence or budget exhausted}
@@ -126,36 +126,32 @@ where $\alpha_k \in \mathbb{C}$ are complex coefficients tuning the relative con
 \end{algorithmic}
 \end{algorithm}
 
-\textbf{Active Learning Loop:} The overall procedure is summarized in Alg.~\ref{alg:quantum_al}. Starting from an initial labeled set $\mathcal{D}_0$ of size $n_0$ (typically 50 samples), the loop alternates between model training and query selection. At each iteration $t$:
+Starting from an initial labeled set $\mathcal{D}_0$ of size $n_0$ (typically 50 samples), the loop alternates between model training and query selection. At each iteration $t$:
 \begin{enumerate}
     \item Train a predictive model $f_t$ (random forest or neural network) on current labeled set $\mathcal{D}_t$.
     \item For each unlabeled candidate $M_i$, prepare quantum state $|\psi_i\rangle$ from its features.
     \item Compute individual observable uncertainties $\{\sigma^2(\hat{O}_k)\}$ and cross-covariances $\{\text{Cov}(\hat{O}_k,\hat{O}_l)\}$.
     \item Calculate total uncertainty $U_{\text{total}}(M_i)$ and rank all candidates.
-    \item Select top $b$ candidates (batch size, e.g., $b=15$) and query their labels via experiment or simulation.
+    \item Select top $b$ candidates (batch size, e.g., $b=15$) and query their labels with experiment or simulation.
     \item Augment labeled set: $\mathcal{D}_{t+1} = \mathcal{D}_t \cup \{\text{selected samples}\}$.
 \end{enumerate}
 The loop continues until a stopping criterion is met (e.g., budget exhausted, performance plateau, or uncertainty threshold reached). This iterative refinement enables efficient exploration of materials space by prioritizing regions with high multi-faceted uncertainty.
 
 \section{Results and Discussion}
 
-The method is evaluated on six diverse materials tasks: band gap prediction ($\approx 800$ semiconductors, 0.5-6 eV), formation energy ($\approx 850$ compounds, $-8$ to $-0.5$ eV/atom), elastic modulus ($\approx 750$ materials, 20-400 GPa), thermal conductivity ($\approx 700$ materials, 1-200 W/m$\cdot$K), magnetic moment ($\approx 650$ magnetic materials, 0-5 $\mu_B$), and dielectric constant ($\approx 780$ electronic materials, 1-100). Features include composition statistics, structural descriptors, and electronic properties. Datasets are preprocessed by standardizing continuous features. Predictive models include Gaussian processes and random forests. Baselines: Query-by-Committee, Expected Improvement, Uncertainty Sampling, BADGE, CoreSet, Maximum Entropy, Random Sampling, diversity-based sampling \cite{settles2022active, kim2021task}. Five trials partition datasets 70\%/30\% (pool/test), initialize with 50 samples, run 8 iterations (batch=15). Broader validation confirms consistency: quantum-enhanced method achieves average final R²$=0.836 \pm 0.041$ across all six tasks, versus uncertainty sampling R²$=0.801 \pm 0.038$ and random R²$=0.721 \pm 0.052$, yielding mean improvement of $4.4\% \pm 1.8\%$ over uncertainty baselines.
+The method is evaluated on six diverse materials tasks: band gap prediction ($\approx 800$ semiconductors, 0.5-6 eV), formation energy ($\approx 850$ compounds, $-8$ to $-0.5$ eV/atom), elastic modulus ($\approx 750$ materials, 20-400 GPa), thermal conductivity ($\approx 700$ materials, 1-200 W/m$\cdot$K), magnetic moment ($\approx 650$ magnetic materials, 0-5 $\mu_B$), and dielectric constant ($\approx 780$ electronic materials, 1-100). Features include composition statistics, structural descriptors, and electronic properties. Datasets are preprocessed by standardizing continuous features. Predictive models include Gaussian processes and random forests. Baselines: Query-by-Committee, Expected Improvement, Uncertainty Sampling, BADGE, CoreSet, Maximum Entropy, Random Sampling, diversity-based sampling \cite{settles2022active, kim2021task}. Five trials partition datasets 70\%/30\% (pool/test), initialize with 50 samples, run 8 iterations (batch=15). Broader validation confirms consistency: quantum-inspired method achieves average final $\mathbb{R}^ 2$ $=0.836 \pm 0.041$ across all six tasks, versus uncertainty sampling $ \mathbb{R}^ 2 $$=0.801 \pm 0.038$ and random $ \mathbb{R}^ 2 $$=0.721 \pm 0.052$, yielding mean improvement of $4.4\% \pm 1.8\%$ over uncertainty baselines.
 
-Table~\ref{tab:overall_results} shows final test R² results across all methods. The quantum-enhanced method attains the highest mean R² on both tasks with smaller variance across trials, indicating more stable performance. Paired t-tests show $p<0.01$ statistical significance against all baselines. Against multi-task and ensemble baselines (shared encoders or averaged regressors trained per property), the method reduces MAE by $\approx$4--6\%, suggesting that explicitly coupling observables yields stronger transfer than weight sharing alone. The consistent performance gain across independent trials demonstrates the robustness of the quantum-inspired selection strategy compared to classical approaches.
-
-Fig.~\ref{fig:learning_curves} presents per-iteration learning curves comparing the quantum-enhanced method to key baselines. The curves demonstrate faster convergence: the quantum method reaches 90\% of its final R² within 6 iterations, whereas classical approaches require 7-8 iterations. The quantum method achieves higher asymptotic performance on both tasks and exhibits smaller variance across trials. This faster convergence directly translates to reduced experimental budget—fewer samples needed to reach comparable performance levels, providing practical value for expensive materials discovery workflows.
-
-The quantum advantage analysis compares performance gains across all nine baselines. Fig.~\ref{fig:quantum_advantage} illustrates the quantum advantage $\Delta R^2$ (difference in final R² between quantum-enhanced and baseline methods). All bars are positive, indicating consistent improvement across diverse selection strategies. The largest advantages appear against diversity-based and random sampling (0.062 and 0.104 R²), while more sophisticated baselines like QBC, EI, and BADGE show smaller but still significant gains (0.026-0.039 R²). This pattern suggests that the quantum framework is most beneficial when classical methods struggle, and continues to provide value even against advanced baselines.
+Table~\ref{tab:overall_results} shows final test $ \mathbb{R}^ 2 $ results across all methods. The quantum-inspired method achieves the highest mean $ \mathbb{R}^ 2 $ on both tasks with smaller variance across trials, indicating more stable performance. Paired t-tests show $p<0.01$ statistical significance against all baselines. Against multi-task and ensemble baselines (shared encoders or averaged regressors trained per property), the method reduces MAE by $\approx$4--6\%, suggesting that explicitly coupling observables yields stronger transfer than weight sharing alone.
 
 \begin{table}[!t]
 \centering
-\caption{Final test R² (mean ± std) after 8 iterations (5 trials).}
+\caption{Final test $ \mathbb{R}^ 2 $ (mean ± std) after 8 iterations (5 trials).}
 \label{tab:overall_results}
 \begin{tabular}{lcc}
 \toprule
 Method & Band gap & Formation energy \\
 \midrule
-Quantum-Enhanced & 0.847 ± 0.023 & 0.792 ± 0.031 \\
+Quantum-inspired & 0.847 ± 0.023 & 0.792 ± 0.031 \\
 Query by Committee & 0.821 ± 0.034 & 0.774 ± 0.028 \\
 Expected Improvement & 0.819 ± 0.029 & 0.771 ± 0.025 \\
 BADGE & 0.808 ± 0.027 & 0.765 ± 0.029 \\
@@ -165,14 +161,16 @@ Random Sampling & 0.743 ± 0.045 & 0.701 ± 0.042 \\
 \end{tabular}
 \end{table}
 
+Fig.~\ref{fig:learning_curves} presents per-iteration learning curves comparing the quantum-inspired method to key baselines. The quantum method reaches 90\% of its final $ \mathbb{R}^ 2 $ in 6 iterations, whereas classical approaches require 7-8 iterations. The quantum method also achieves higher asymptotic performance on both tasks and exhibits smaller variance across 5 trials. This faster convergence directly translates to reduced experimental budget with fewer samples needed to reach comparable performance levels, thus providing practical value for expensive material discovery workflows.
+
 \begin{figure}[!t]
 \centering
 \begin{tikzpicture}
 \begin{axis}[
     width=0.9\columnwidth,
     height=5cm,
-    xlabel={Active Learning Iteration},
-    ylabel={R² Score},
+    xlabel={Active learning iteration},
+    ylabel={$ \mathbb{R}^ 2 $ score},
     xmin=1, xmax=8,
     ymin=0.65, ymax=0.85,
     grid=major,
@@ -201,10 +199,12 @@ Random Sampling & 0.743 ± 0.045 & 0.701 ± 0.042 \\
 \addlegendentry{Random}
 \end{axis}
 \end{tikzpicture}
-\caption{Learning curves for band gap prediction. Quantum-enhanced method consistently outperforms classical approaches.}
+\caption{Learning curves for band gap prediction. Quantum-inspired method consistently outperforms classical approaches over all 8 iterations.}
 \label{fig:learning_curves}
 \end{figure}
 
+
+The quantum advantage analysis compares performance gains across all nine baselines. Fig.~\ref{fig:quantum_advantage} illustrates the quantum advantage $\Delta R^2$ (difference in final $ \mathbb{R}^ 2 $ between quantum-inspired and baseline methods). All bars are positive, indicating consistent improvement across diverse selection strategies. The largest advantages appear against diversity-based and random sampling (0.062 and 0.104 $ \mathbb{R}^ 2 $), while more sophisticated baselines like QBC, EI, and BADGE show smaller but still significant gains (0.026-0.039 $ \mathbb{R}^ 2 $).
 
 \begin{figure}[!t]
 \centering
@@ -212,12 +212,12 @@ Random Sampling & 0.743 ± 0.045 & 0.701 ± 0.042 \\
 \begin{axis}[
     width=0.85\columnwidth,
     height=4.5cm,
-    xlabel={Classical Methods},
-    ylabel={Quantum Advantage ($\Delta$R²)},
+    xlabel={Classical methods},
+    ylabel={Quantum advantage ($\Delta$$ \mathbb{R}^ 2 $)},
     ybar,
     bar width=0.20cm,
     grid=major,
-    xticklabels={QBC, EI, Unc., BADGE, MaxEnt, RF, Core, Div., Rand.},
+    xticklabels={QBC, EI, Unc. Sampling, BADGE, MaxEnt, Rand. Sampling, Core, Div., Rand.},
     xticklabel style={rotate=45, anchor=east, font=\tiny},
     nodes near coords,
     nodes near coords style={font=\tiny}
@@ -231,7 +231,7 @@ Random Sampling & 0.743 ± 0.045 & 0.701 ± 0.042 \\
 \label{fig:quantum_advantage}
 \end{figure}
 
-Statistical significance testing confirms the robustness of improvements. Table~\ref{tab:statistical_tests} reports paired two-sided t-tests comparing the quantum-enhanced method against each baseline across five trials. All comparisons achieve $p<0.01$ significance, with stronger baselines (QBC, EI) showing $p=0.005$-$0.008$, and weaker methods showing $p<0.001$. Normality of differences was verified via QQ-plots. Holm-Bonferroni corrections across nine tests preserve all conclusions, supporting the method's statistical strength.
+ Table~\ref{tab:statistical_tests} reports paired two-sided t-tests comparing the quantum-inspired method against each baseline across 5 trials. All comparisons achieve $p<0.01$ significance, with stronger baselines (QBC, EI) showing $p=0.005$-$0.008$, and weaker methods showing $p<0.001$. Normality of differences was verified with QQ-plots. Holm-Bonferroni corrections across nine tests preserve all conclusions, supporting the method's statistical strength.
 
 \begin{table}[!t]
 \centering
@@ -251,40 +251,37 @@ vs. Random Sampling & 8.45 & $<0.001$ \\
 \end{tabular}
 \end{table}
 
-Key findings emerge: (i) quantum-inspired multi-observable variance yields consistent improvements; (ii) the quantum method attains 90\% of final R² 1-2 iterations earlier than top baselines, demonstrating practical sample efficiency gains; (iii) covariance terms capturing cross-observable dependencies contribute meaningfully to selection accuracy; (iv) improvements hold across diverse materials properties and baseline methods.
-
-The quantum-inspired state encoding captures cross-property correlations difficult to express with single-number uncertainty metrics. By aggregating variances and covariances across physically-motivated observables (structure, electronic, thermodynamic), the framework produces richer uncertainty signals that highlight candidates simultaneously uncertain across multiple property domains. The amplitude-based representation effectively accounts for multiple plausible explanations via superposition, leading to more diverse and informative batch selections early in the learning process.
+By aggregating variances and covariances across physically-motivated observables, the framework produces better uncertainty signals that highlight candidates simultaneously uncertain across multiple property domains. The amplitude-based representation effectively accounts for multiple plausible explanations with superposition, leading to more diverse and informative batch selections early in the learning process.
 
 \subsection{Multi-Property Optimization}
-Extending to simultaneous optimization of four correlated properties (band gap, formation energy, elastic modulus, thermal conductivity), the coupled-observable framework shows R²$_{\text{avg}}$ gains of 3.2\%-7.8\% per iteration by explicitly modeling inter-property correlations. Properties with known negative/positive correlations (e.g., elastic modulus $\sim$ thermal conductivity, $\rho=0.67$) benefit from coupling: samples uncertain across multiple properties are prioritized via aggregated covariance. Transfer among properties reduces sample cost by 22\% versus independent training per property. This demonstrates scalability to materials design scenarios requiring simultaneous satisfaction of multiple constraints.
+Extending to simultaneous optimization of four correlated properties (band gap, formation energy, elastic modulus, thermal conductivity), the coupled-observable framework shows $ \mathbb{R}^ 2 $$_{\text{avg}}$ gains of 3.2\%-7.8\% per iteration by explicitly modeling inter-property correlations. Properties with known negative/positive correlations (e.g. elastic modulus $\sim$ thermal conductivity, $\rho=0.67$) benefit from coupling as samples uncertain across multiple properties are prioritized with aggregated covariance. Transfer among properties reduces sample cost by 22\% against independent training per property. This displays scalability to materials design scenarios requiring simultaneous satisfaction of multiple constraints.
 
-\textit{Pareto comparison:} Pareto frontier methods preserve objective diversity but require $\mathcal{O}(n^2 \log n)$ optimization. The scalar aggregation via covariance ($\mathcal{O}(n)$) implicitly balances objectives. Pareto achieves 2.1\% better hypervolume coverage at 4$\times$ runtime cost; for sample-efficient discovery, the scalar approach offers favorable trade-offs.
+\textit{Pareto comparison:} Pareto frontier methods maintain objective diversity but require $\mathcal{O}(n^2 \log n)$ optimization. Scalar aggregation with covariance ($\mathcal{O}(n)$) implicitly balances objectives. Pareto achieves 2.1\% better hypervolume coverage at 4$\times$ runtime cost; for sample-efficient discovery, the scalar approach offers favorable trade-offs.
 
 \subsection{Discrete Classification Tasks}
 Testing on materials classification (crystal system: cubic, hexagonal, tetragonal, etc.; stability class), quantum-margin sampling (combining entropy and decision-boundary margins) achieves 3.5\%-8.2\% higher accuracy than entropy-only or random sampling after 8 iterations. The non-commuting observable structure translates to discrete domains as uncertainty over class probabilities, enabling the same quantum-inspired selection logic without modification. Final accuracy: $\approx$91\% on crystal-system 6-class task versus 85\% for conventional uncertainty sampling—indicating broader applicability beyond regression.
 
 \subsection{Transfer Learning Across Materials Families}
-Transfer from oxide data to sulfides/nitrides demonstrates accelerated learning curves: fine-tuning on 50 target-domain samples achieves R²$=0.82$ within 6 active iterations, whereas training from scratch requires 7-8 iterations to reach R²$=0.80$. The learned observable weights capture shared structure-property relationships, transferring effectively to new anionic environments. This validates that quantum-inspired uncertainty generalizes across domains, reducing discovery burden when moving to new materials classes \cite{xie2023uncertainty, cova2022bayesian}.
+Transfer from oxide data to sulfides/nitrides demonstrates accelerated learning curves: fine-tuning on 50 target-domain samples achieves $ \mathbb{R}^ 2 $$=0.82$ within 6 active iterations, whereas training from scratch requires 7-8 iterations to reach $ \mathbb{R}^ 2 $$=0.80$. The learned observable weights capture shared structure-property relationships and transfer effectively to new anionic environments. This validates that quantum-inspired uncertainty generalizes across domains, reducing discovery burden when moving to new materials classes \cite{xie2023uncertainty, cova2022bayesian}.
 
 \subsection{Spurious Covariance and Failure Modes}
-In high-noise regimes ($\sigma_{\text{noise}}>0.2$), empirical correlations deviate $\Delta\rho>0.15$ from true values, causing misdirected batch selection and performance degradation (final R²$<0.60$). Coupled uncertainty aggregation amplifies errors when correlation estimates are unreliable. Mitigation strategies: (i) use robust correlation estimators (Spearman's rank, minimum covariance determinant) to reduce spurious correlations; (ii) reduce coupling weight dynamically when noise is high ($w_{\text{cov}} \propto 1/\sigma^2$); (iii) monitor correlation agreement and warn when $\Delta\rho$ exceeds threshold. Results show that at moderate noise ($\sigma=0.1$), agreement remains $>0.85$; explicit quality control preserves 1.5\%-3\% of gains even in adversarial noise scenarios.
+In high-noise regimes ($\sigma_{\text{noise}}>0.2$), empirical correlations dewithte $\Delta\rho>0.15$ from true values, causing misdirected batch selection and performance degradation (final $ \mathbb{R}^ 2 $$<0.60$). Coupled uncertainty aggregation increases errors when correlation estimates are irregular. Mitigation strategies: (i) use robust correlation estimators (Spearman's rank, minimum covariance determinant) to reduce spurious correlations; (ii) reduce coupling weight dynamically when noise is high ($w_{\text{cov}} \propto 1/\sigma^2$); (iii) monitor correlation agreement and warn when $\Delta\rho$ exceeds threshold. Results show that at moderate noise ($\sigma=0.1$), agreement remains $>0.85$. Explicit quality control preserves 1.5\%-3\% of gains even in adversarial noise scenarios.
 
 \subsection{Runtime and Memory Efficiency}
-Benchmarks (100--2000 samples) show $\mathcal{O}(n \log n)$ scaling. At $n=2000$: quantum requires $8.3\pm0.4$s and $127\pm5$MB versus random at $3.1$s/$89$MB. Memory overhead: +43\% (quantum), +48\% (EI), +75\% (QBC). Efficiency (R²/sec): quantum 0.098 vs. uncertainty 0.083 and QBC 0.067. For expensive experiments ($10^2$--$10^3$ USD/sample), 25--35\% sample gains justify 2--3$\times$ computational cost.
+Benchmarks (100--2000 samples) show $\mathcal{O}(n \log n)$ scaling. At $n=2000$: quantum requires $8.3\pm0.4$s and $127\pm5$MB versus random at $3.1$s/$89$MB. Memory overhead: +43\% (quantum), +48\% (EI), +75\% (QBC). Efficiency ($ \mathbb{R}^ 2 $/sec): quantum 0.098 vs. uncertainty 0.083 and QBC 0.067. For expensive experiments ($10^2$--$10^3$ USD/sample), 25--35\% sample gains justify 2--3$\times$ computational cost.
 
 \subsection{Observable Sensitivity Analysis}
-Observable sensitivity analysis: optimal at 3-4 observables (R²$=0.841\pm0.012$); 2 observables underfit (R²$=0.792$), 6 show diminishing returns (R²$=0.828$). Correlation modeling adds +2.8\% vs. independent treatment. Type choice varies 4.7\%; physics-based combinations (structural+electronic+thermodynamic) outperform redundant sets by 3.2\%. Recommendation: 3 domain-informed observables; beyond 4 yields $<$1\% gain at 15-20\% memory cost per observable.
+Observable sensitivity analysis: optimal at 3-4 observables ($ \mathbb{R}^ 2 $$=0.841\pm0.012$); 2 observables underfit ($ \mathbb{R}^ 2 $$=0.792$), 6 show diminishing returns ($ \mathbb{R}^ 2 $$=0.828$). Correlation modeling adds +2.8\% vs. independent treatment. Type choice varies 4.7\%; physics-based combinations (structural+electronic+thermodynamic) outperform redundant sets by 3.2\%. Recommendation: 3 domain-informed observables; beyond 4 yields $<$1\% gain at 15-20\% memory cost per observable.
 
-Limitations include reliance on hand-designed observables rather than learned representations; scalar aggregation of multi-observable uncertainty into one score, which can downplay Pareto trade-offs; evaluation on materials tasks without wet-lab validation; and focus on classical hardware without quantum co-processor comparison. Gains observed here arise from structured covariance modeling on classical hardware; correlated deep ensembles or multi-task Bayesian baselines are relevant for future comparisons, and spurious covariances in noisy regimes could mislead selection.
+Limitations include (i) reliance on hand-designed observables rather than learned representations (ii) scalar aggregation of multi-observable uncertainty into one score, which can downplay Pareto trade-offs (iii) evaluation on materials tasks without wet-lab validation (iv) focus on classical hardware without quantum co-processor comparison (v) spurious covariances in noisy regimes could mislead selection. Gains observed here arise from structured covariance modeling on classical hardware. Correlated deep ensembles or multi-task Bayesian baselines are relevant for future comparisons.
 
 \section{Conclusion and Future Scope}
 
-This work introduces quantum-enhanced active learning for materials discovery leveraging quantum superposition and multi-observable uncertainty quantification. Key contributions: (i) amplitude-based encoding with physically-motivated observables computing cross-observable covariances; (ii) aggregation score combining variances and covariances with complex weighting; (iii) practical model-agnostic loop supporting batch selection; (iv) comprehensive validation against nine baselines showing consistent R² gains of 2.6\%-10.4\% and sample efficiency improvements of 25-35\%.
+This work introduces quantum-inspired active learning for materials discovery leveraging quantum superposition and multi-observable uncertainty quantification. Key contributions: (i) amplitude-based encoding with physically-motivated observables computing cross-observable covariances; (ii) aggregation score combining variances and covariances with complex weighting; (iii)  comprehensive validation against nine baselines showing consistent $ \mathbb{R}^ 2 $ gains of 2.6\%-10.4\% and sample efficiency improvements of 25-35\%.
 
-Results establish quantum-enhanced active learning as a promising approach for computational materials science. Quantum computing principles provide fundamental efficiency improvements even on classical hardware, reducing experimental burden and accelerating discovery cycles.
+Results establish quantum-inspired active learning as a promising approach for computational materials science. Quantum computing principles provide fundamental efficiency improvements even on classical hardware, reducing experimental burden and accelerating discovery cycles.
 
-\vspace{-3mm}
-Future work includes: (i) \textit{Learned observables}: Current observables are hand-crafted from domain knowledge (e.g., structural symmetries, band-edge correlations). Automatic learning can employ: (a) variational autoencoders mapping materials features to latent observables minimizing reconstruction error plus orthogonality constraints; (b) attention mechanisms over feature groups identifying salient interactions (e.g., multi-head attention weights as observable matrices); (c) adversarial training where a discriminator enforces non-commuting observable structure in learned representations; (d) meta-learning across materials families to discover transferable observable parameterizations. Gradient-based optimization of observable weights $w_{ij}^{(k)}$ using acquisition function sensitivity $\partial U_{\text{total}} / \partial w_{ij}^{(k)}$ can adapt observables online during active learning. Preliminary tests show learned observables via $\ell_2$-regularized gradient descent on held-out validation uncertainty reduce hand-engineering effort by 60\% while preserving 85\% of sample-efficiency gains; (ii) multi-objective/Pareto-aware selection to avoid collapsing rich trade-offs; (iii) broader validation across materials families, including classification tasks and discrete design spaces; (iv) transfer learning across families and cross-task reuse of observables; (v) integration with high-throughput or autonomous experimental platforms; (vi) exploration of native quantum implementations as hardware matures.
+Future work includes: (i) Current observables are hand-crafted from domain knowledge (e.g., structural symmetries, band-edge correlations). Automatic learning can employ: (a) variational autoencoders mapping materials features to latent observables minimizing reconstruction error plus orthogonality constraints; (b) attention mechanisms over feature groups identifying salient interactions (e.g., multi-head attention weights as observable matrices); (c) adversarial training where a discriminator enforces non-commuting observable structure in learned representations; (d) meta-learning across materials families to discover transferable observable parameterizations. Gradient-based optimization of observable weights $w_{ij}^{(k)}$ using acquisition function sensitivity $\partial U_{\text{total}} / \partial w_{ij}^{(k)}$ can adapt observables online during active learning. Preliminary tests show learned observables with $\ell_2$-regularized gradient descent on held-out validation uncertainty reduce hand-engineering effort by 60\% while preserving 85\% of sample-efficiency gains; (ii) multi-objective/Pareto-aware selection to avoid collapsing rich trade-offs; (iii) broader validation across materials families, including classification tasks and discrete design spaces; (iv) transfer learning across families and cross-task reuse of observables; (v) integration with high-throughput or autonomous experimental platforms; (vi) exploration of native quantum implementations as hardware matures.
 
 \balance
 \bibliographystyle{ieee-standard/IEEEtranBST2/IEEEtran}
