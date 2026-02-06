@@ -1,4 +1,4 @@
-\documentclass[conference]{ieee-standard/IEEEtran}
+\documentclass[conference]{IEEEtran}
 \IEEEoverridecommandlockouts
 \usepackage{cite}
 \usepackage{amsmath,amssymb,amsfonts}
@@ -17,7 +17,24 @@
 \usepackage[caption=false,font=footnotesize]{subfig}
 \usepackage{algorithm}
 \usepackage{balance}
+\usepackage{fancyhdr}
 \pgfplotsset{compat=1.18}
+
+% Camera-ready header and footer
+\fancypagestyle{IEEEtitlepagestyle}{%
+  \fancyhf{}
+  \fancyhead[R]{\small\textbf{2026 International Conference on Next-Gen Quantum and Advanced Computing: Algorithms, Security, and Beyond (NQComp)}}
+  \fancyfoot[C]{\footnotesize 979-8-3315-5935-9/26/\$31.00 \copyright 2026 IEEE}
+  \renewcommand{\headrulewidth}{0pt}
+  \renewcommand{\footrulewidth}{0pt}
+}
+
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[R]{\small\textbf{2026 International Conference on Next-Gen Quantum and Advanced Computing: Algorithms, Security, and Beyond (NQComp)}}
+\fancyfoot[C]{\footnotesize 979-8-3315-5935-9/26/\$31.00 \copyright 2026 IEEE}
+\renewcommand{\headrulewidth}{0pt}
+\renewcommand{\footrulewidth}{0pt}
 
 % IEEE style: Roman numerals for tables
 \renewcommand{\thetable}{\Roman{table}}
@@ -34,6 +51,7 @@ arnavkapoor23@iiserb.ac.in
 
 \begin{document}
 \maketitle
+\thispagestyle{IEEEtitlepagestyle}
 
 \begin{abstract}
 This paper develops a quantum-inspired active learning framework for materials discovery by combining state encoding with multi-observable uncertainty quantification. The approach derives uncertainty metrics by capturing coupled structure-property relationships. Evaluated on band gap and formation energy prediction tasks in five independent runs comparing nine baselines, the quantum-inspired method consistently achieves a higher test $ \mathbb{R}^ 2 $ and improved sample efficiency, reducing the experimental budget by 25-35\% (paired t-tests, $p<0.01$).
@@ -286,7 +304,7 @@ Results establish quantum-inspired active learning as a promising approach for c
 Future work includes: (i) Current observables are hand-crafted from domain knowledge (e.g., structural symmetries, band-edge correlations). Automatic learning can employ: (a) variational autoencoders mapping materials features to latent observables minimizing reconstruction error plus orthogonality constraints; (b) attention mechanisms over feature groups identifying salient interactions (e.g., multi-head attention weights as observable matrices); (c) adversarial training where a discriminator enforces non-commuting observable structure in learned representations; (d) meta-learning across materials families to discover transferable observable parameterizations. Gradient-based optimization of observable weights $w_{ij}^{(k)}$ using acquisition function sensitivity $\partial U_{\text{total}} / \partial w_{ij}^{(k)}$ can adapt observables online during active learning. Preliminary tests show learned observables with $\ell_2$-regularized gradient descent on held-out validation uncertainty reduce hand-engineering effort by 60\% while preserving 85\% of sample-efficiency gains; (ii) multi-objective/Pareto-aware selection to avoid collapsing rich trade-offs; (iii) broader validation across materials families, including classification tasks and discrete design spaces; (iv) transfer learning across families and cross-task reuse of observables; (v) integration with high-throughput or autonomous experimental platforms; (vi) exploration of native quantum implementations as hardware matures.
 
 \balance
-\bibliographystyle{ieee-standard/IEEEtranBST2/IEEEtran}
+\bibliographystyle{IEEEtran}
 \bibliography{refs}
 
 \end{document}
