@@ -1,0 +1,34 @@
+cff-version: 1.2.0
+message: "If you use this code or cite its findings, please cite it as below."
+title: "quantum_al: Quantum-Inspired Active Learning for Materials Discovery"
+type: software
+authors:
+  - family-names: "Kapoor"
+    given-names: "Arnav"
+    orcid: "https://orcid.org/0009-0007-9818-7908"
+    affiliation: "Indian Institute of Science Education and Research Bhopal"
+repository-code: "https://github.com/arnavk23/Quantum-active-learning"
+license: MIT
+keywords:
+  - active learning
+  - materials discovery
+  - quantum-inspired algorithms
+  - uncertainty quantification
+  - negative result
+abstract: >-
+  Implementation and evaluation of a covariance-aware quantum-inspired
+  uncertainty formalism for active learning in materials discovery. Includes
+  a rigorous, real-data (Materials Project) benchmark against nine standard
+  active-learning baselines, an ablation study, and an observable-sensitivity
+  sweep. The accompanying paper reports this as a negative result: the
+  formalism does not outperform standard baselines, and diagnoses why.
+preferred-citation:
+  type: article
+  title: "Quantum-inspired covariance does not improve active learning for materials discovery"
+  authors:
+    - family-names: "Kapoor"
+      given-names: "Arnav"
+      orcid: "https://orcid.org/0009-0007-9818-7908"
+      affiliation: "Indian Institute of Science Education and Research Bhopal"
+  status: preprint
+  year: 2026

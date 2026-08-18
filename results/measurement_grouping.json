@@ -1,0 +1,56 @@
+{
+  "per_quantity": {
+    "structural_O": {
+      "raw": 528,
+      "qwc_groups": 122,
+      "full_commuting_groups": 43
+    },
+    "structural_O2": {
+      "raw": 528,
+      "qwc_groups": 122,
+      "full_commuting_groups": 43
+    },
+    "electronic_O": {
+      "raw": 528,
+      "qwc_groups": 122,
+      "full_commuting_groups": 43
+    },
+    "electronic_O2": {
+      "raw": 528,
+      "qwc_groups": 122,
+      "full_commuting_groups": 43
+    },
+    "thermodynamic_O": {
+      "raw": 528,
+      "qwc_groups": 122,
+      "full_commuting_groups": 43
+    },
+    "thermodynamic_O2": {
+      "raw": 528,
+      "qwc_groups": 122,
+      "full_commuting_groups": 43
+    },
+    "structural_electronic_sym": {
+      "raw": 528,
+      "qwc_groups": 122,
+      "full_commuting_groups": 43
+    },
+    "structural_thermodynamic_sym": {
+      "raw": 528,
+      "qwc_groups": 122,
+      "full_commuting_groups": 43
+    },
+    "electronic_thermodynamic_sym": {
+      "raw": 528,
+      "qwc_groups": 122,
+      "full_commuting_groups": 43
+    }
+  },
+  "totals_K3": {
+    "raw": 4752,
+    "qwc_groups": 1098,
+    "full_commuting_groups": 387,
+    "qwc_reduction_factor": 4.327868852459017,
+    "full_reduction_factor": 12.279069767441861
+  }
+}
