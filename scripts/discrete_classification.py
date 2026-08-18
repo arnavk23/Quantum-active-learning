@@ -8,6 +8,9 @@ Classification targets: Crystal system (cubic, hexagonal, tetragonal, etc.),
 Stability class (stable, metastable, unstable)
 """
 
+import os
+import sys
+
 import numpy as np
 import matplotlib.pyplot as plt
 from sklearn.ensemble import RandomForestClassifier
@@ -16,57 +19,43 @@ from sklearn.metrics import accuracy_score, f1_score, confusion_matrix
 from sklearn.model_selection import train_test_split
 import json
 
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+from data_utils import load_task  # noqa: E402
+
 
 class DiscreteClassificationFramework:
     """
     Quantum-enhanced active learning for discrete materials classification.
     Extends continuous property prediction to discrete categorical tasks.
+
+    Uses the real 7-class crystal_system classification data from
+    data/crystal_system.json (scripts/fetch_real_materials_data.py) instead
+    of a synthetic generator: real feature columns, real crystal-system
+    labels (Cubic, Hexagonal, Monoclinic, Orthorhombic, Tetragonal,
+    Triclinic, Trigonal), matching the real class distribution actually
+    present in the Materials Project pull (not a fabricated 6-class split).
     """
-    
-    def __init__(self, n_classes=6):
+
+    def __init__(self, n_classes=7):
         self.n_classes = n_classes
-        self.class_names = ['Cubic', 'Hexagonal', 'Tetragonal', 'Orthorhombic', 'Monoclinic', 'Triclinic']
+        # Populated from the real data the first time load_real_classification_dataset
+        # is called; kept here only as a fallback default.
+        self.class_names = None
+        self.label_encoder = LabelEncoder()
+
+    def load_real_classification_dataset(self):
+        """Load the real crystal_system classification data (data/crystal_system.json,
+        pulled from the Materials Project by scripts/fetch_real_materials_data.py).
+        Returns (X, y) with X the 21 real composition/structure features and y the
+        integer-encoded real crystal-system label."""
+        X, y_str, meta = load_task('crystal_system')
+        self.class_names = sorted(set(y_str.tolist()))
+        self.n_classes = len(self.class_names)
         self.label_encoder = LabelEncoder()
         self.label_encoder.fit(self.class_names)
-        
-    def generate_synthetic_classification_dataset(self, n_samples=1200, seed=42):
-        """
-        Generate synthetic crystallographic classification dataset
-        with class-dependent feature distributions.
-        """
-        np.random.seed(seed)
-        n_features = 20
-        
-        X = np.zeros((n_samples, n_features))
-        y = np.zeros(n_samples, dtype=int)
-        
-        samples_per_class = n_samples // self.n_classes
-        
-        for class_idx in range(self.n_classes):
-            start_idx = class_idx * samples_per_class
-            end_idx = start_idx + samples_per_class
-            
-            # Generate class-specific feature distributions
-            # Cubic-like features: symmetric
-            if class_idx == 0:
-                X[start_idx:end_idx] = np.random.randn(samples_per_class, n_features) * 0.8 + 2.0
-            # Hexagonal-like features: anisotropic
-            elif class_idx == 1:
-                X[start_idx:end_idx, :10] = np.random.randn(samples_per_class, 10) * 1.2 + 1.5
-                X[start_idx:end_idx, 10:] = np.random.randn(samples_per_class, 10) * 0.5 + 0.5
-            # Other classes with intermediate patterns
-            else:
-                X[start_idx:end_idx] = np.random.randn(samples_per_class, n_features) * (0.5 + 0.3*class_idx)
-            
-            y[start_idx:end_idx] = class_idx
-        
-        # Shuffle
-        perm = np.random.permutation(n_samples)
-        X = X[perm]
-        y = y[perm]
-        
+        y = self.label_encoder.transform(y_str)
         return X, y
-    
+
     def entropy_sampling(self, X_pool, model, pool_indices):
         """
         Entropy-based sampling for classification.
@@ -121,15 +110,22 @@ class DiscreteClassificationFramework:
         print("Discrete Materials Classification Experiment")
         print("=" * 70)
         
-        # Generate dataset
-        X_all, y_all = self.generate_synthetic_classification_dataset(n_samples=1200)
-        
+        # Load real crystal_system classification dataset (Materials Project,
+        # via scripts/fetch_real_materials_data.py) -- real features, real
+        # 7-class crystal-system labels, not a synthetic generator.
+        X_all, y_all = self.load_real_classification_dataset()
+        print(f"Loaded real crystal_system data: {X_all.shape[0]} samples, "
+              f"{X_all.shape[1]} features, {self.n_classes} classes "
+              f"({self.class_names})")
+
         # Normalize features
         scaler = StandardScaler()
         X_all = scaler.fit_transform(X_all)
-        
-        # Split into train pool and test set
-        train_indices = np.random.choice(len(X_all), size=800, replace=False)
+
+        # Split into train pool (70%) and test set (30%), matching the
+        # 70/30 protocol used elsewhere in this benchmark suite.
+        n_train = int(round(0.7 * len(X_all)))
+        train_indices = np.random.choice(len(X_all), size=n_train, replace=False)
         test_indices = np.array([i for i in range(len(X_all)) if i not in train_indices])
         
         X_train, y_train = X_all[train_indices], y_all[train_indices]
@@ -173,9 +169,9 @@ class DiscreteClassificationFramework:
                 print(f"  Iter {iteration+1}: Accuracy={accuracy:.4f}, F1={f1:.4f}")
                 
                 # Store results
-                if iteration == 0 and strategy_name == 'quantum_margin':
+                if strategy_name == 'quantum_margin':
                     results['iteration'].append(iteration + 1)
-                
+
                 if strategy_name == 'quantum_margin':
                     results['accuracy_quantum'].append(accuracy)
                     results['f1_quantum'].append(f1)

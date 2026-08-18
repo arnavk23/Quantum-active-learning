@@ -38,7 +38,26 @@ class MultiPropertyOptimizer:
             [0.52,   -0.58,   1.0,    0.67],    # Elastic modulus
             [-0.38,   0.41,   0.67,    1.0]     # Thermal conductivity
         ])
+        # BUGFIX: this hand-picked pairwise-correlation matrix is not
+        # positive semi-definite (smallest eigenvalue ~= -0.169), so
+        # np.linalg.cholesky() on it always raises LinAlgError regardless
+        # of random seed. Project to the nearest valid correlation matrix
+        # (eigenvalue clipping + rescale to unit diagonal) so it remains as
+        # close as possible to the intended domain-knowledge structure
+        # while actually being usable as a covariance/correlation matrix.
+        corr = self._nearest_psd_correlation(corr)
         return corr
+
+    @staticmethod
+    def _nearest_psd_correlation(corr, eps=1e-6):
+        """Project a symmetric matrix to the nearest positive-semi-definite
+        correlation matrix via eigenvalue clipping + unit-diagonal rescale."""
+        sym = (corr + corr.T) / 2.0
+        eigvals, eigvecs = np.linalg.eigh(sym)
+        eigvals_clipped = np.clip(eigvals, eps, None)
+        psd = eigvecs @ np.diag(eigvals_clipped) @ eigvecs.T
+        d = np.sqrt(np.diag(psd))
+        return psd / np.outer(d, d)
     
     def generate_synthetic_dataset(self, n_samples=1000, seed=42):
         """Generate synthetic multi-property materials dataset with realistic correlations."""
