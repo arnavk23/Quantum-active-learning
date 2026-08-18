@@ -298,7 +298,7 @@ class ObservableSensitivityAnalysis:
         print(f"   Sensitivity: {(max_r2 - min_r2)/min_r2 * 100:.1f}% variation")
         
         corr_benefit = np.mean([
-            results['final_r2_correlated'][i] - results['final_r2_independent'][i]
+            number_results['final_r2_correlated'][i] - number_results['final_r2_independent'][i]
             for i in range(len(number_results['n_observables']))
         ])
         print(f"3. Average benefit of correlation modeling: +{corr_benefit*100:.2f}% R²")

@@ -103,9 +103,10 @@ class TransferLearningFramework:
         """
         
         # Generate pool of unlabeled target domain samples
-        labeled_idx = np.random.choice(len(X_target_train), 
+        batch_size = 15  # BUGFIX: was assigned after first use below (UnboundLocalError)
+        labeled_idx = np.random.choice(len(X_target_train),
                                       size=n_transfer_samples, replace=False)
-        pool_idx = np.array([i for i in range(len(X_target_train)) 
+        pool_idx = np.array([i for i in range(len(X_target_train))
                             if i not in labeled_idx])
         
         transfer_results = {
@@ -167,8 +168,6 @@ class TransferLearningFramework:
                 _, uncertainties = transfer_model.predict(
                     X_target_train[pool_idx], return_std=True
                 )
-                
-                batch_size = 15
                 top_indices = np.argsort(uncertainties)[-batch_size:]
                 selected = pool_idx[top_indices]
                 

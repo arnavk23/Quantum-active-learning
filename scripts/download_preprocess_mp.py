@@ -3,7 +3,12 @@ from mp_api.client import MPRester
 import pandas as pd
 import os
 
-API_KEY = "VYHVfA6CFvAep4e8ddobao7RAijtG4Tp"
+API_KEY = os.environ.get("MP_API_KEY")
+if not API_KEY:
+    raise RuntimeError(
+        "Set the MP_API_KEY environment variable to your Materials Project API "
+        "key (https://next-gen.materialsproject.org/api) before running this script."
+    )
 DATA_DIR = "./data"
 OUTPUT_FILE = os.path.join(DATA_DIR, "mp_dft_data.csv")
 
