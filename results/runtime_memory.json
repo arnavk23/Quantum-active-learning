@@ -1,0 +1,245 @@
+{
+  "task": "band_gap",
+  "n_repeats": 3,
+  "n_train_labeled": 50,
+  "n_pool_candidates_real": 650,
+  "note": "n_pool_candidates_real is the actual achievable pool size from the real Materials Project data after the 70/30 split and removing the n0=50 initial labeled set (no padding/duplication of rows). An additional bootstrap-resampled extrapolation point is reported separately below and is explicitly labeled as such -- it is NOT a second real measurement.",
+  "methods": {
+    "Quantum-Enhanced": {
+      "runs_ok": 3,
+      "runs_error": 0,
+      "errors": [],
+      "wall_time_sec_mean": 0.3690940539042155,
+      "wall_time_sec_std": 0.0019000956730713232,
+      "peak_memory_MB_mean": 0.6691741943359375,
+      "peak_memory_MB_std": 3.2368779656366614e-05,
+      "raw_times_sec": [
+        0.37163543701171875,
+        0.3685793876647949,
+        0.3670673370361328
+      ],
+      "raw_peak_memory_MB": [
+        0.669219970703125,
+        0.6691513061523438,
+        0.6691513061523438
+      ]
+    },
+    "Uncertainty Sampling": {
+      "runs_ok": 3,
+      "runs_error": 0,
+      "errors": [],
+      "wall_time_sec_mean": 0.08098689715067546,
+      "wall_time_sec_std": 0.003660628274323428,
+      "peak_memory_MB_mean": 0.7926712036132812,
+      "peak_memory_MB_std": 0.011876393325964421,
+      "raw_times_sec": [
+        0.08616042137145996,
+        0.07823801040649414,
+        0.07856225967407227
+      ],
+      "raw_peak_memory_MB": [
+        0.8091335296630859,
+        0.7873239517211914,
+        0.7815561294555664
+      ]
+    },
+    "Query by Committee": {
+      "runs_ok": 3,
+      "runs_error": 0,
+      "errors": [],
+      "wall_time_sec_mean": 1.5392041206359863,
+      "wall_time_sec_std": 0.019019883904530303,
+      "peak_memory_MB_mean": 0.9583120346069336,
+      "peak_memory_MB_std": 0.06961905493307013,
+      "raw_times_sec": [
+        1.5638973712921143,
+        1.5176208019256592,
+        1.5360941886901855
+      ],
+      "raw_peak_memory_MB": [
+        1.0567636489868164,
+        0.9099102020263672,
+        0.9082622528076172
+      ]
+    },
+    "Expected Improvement": {
+      "runs_ok": 3,
+      "runs_error": 0,
+      "errors": [],
+      "wall_time_sec_mean": 0.08266933759053548,
+      "wall_time_sec_std": 0.0009382238185240998,
+      "peak_memory_MB_mean": 1.278724988301595,
+      "peak_memory_MB_std": 0.0022670475152619216,
+      "raw_times_sec": [
+        0.08396291732788086,
+        0.08227825164794922,
+        0.08176684379577637
+      ],
+      "raw_peak_memory_MB": [
+        1.2817754745483398,
+        1.2780542373657227,
+        1.2763452529907227
+      ]
+    },
+    "Maximum Entropy": {
+      "runs_ok": 3,
+      "runs_error": 0,
+      "errors": [],
+      "wall_time_sec_mean": 0.8797179857889811,
+      "wall_time_sec_std": 0.039961463566290684,
+      "peak_memory_MB_mean": 1.1731398900349934,
+      "peak_memory_MB_std": 0.0007264141434556215,
+      "raw_times_sec": [
+        0.8258414268493652,
+        0.8918790817260742,
+        0.9214334487915039
+      ],
+      "raw_peak_memory_MB": [
+        1.173264503479004,
+        1.1739606857299805,
+        1.172194480895996
+      ]
+    },
+    "Diversity Sampling": {
+      "runs_ok": 3,
+      "runs_error": 0,
+      "errors": [],
+      "wall_time_sec_mean": 0.8690451780954996,
+      "wall_time_sec_std": 1.0779175263670993,
+      "peak_memory_MB_mean": 0.3251800537109375,
+      "peak_memory_MB_std": 0.0725087638954632,
+      "raw_times_sec": [
+        2.3934502601623535,
+        0.10577034950256348,
+        0.10791492462158203
+      ],
+      "raw_peak_memory_MB": [
+        0.4277229309082031,
+        0.2739124298095703,
+        0.27390480041503906
+      ]
+    },
+    "BADGE": {
+      "runs_ok": 3,
+      "runs_error": 0,
+      "errors": [],
+      "wall_time_sec_mean": 1.0003446737925212,
+      "wall_time_sec_std": 0.009287875830320378,
+      "peak_memory_MB_mean": 1.7973009745279949,
+      "peak_memory_MB_std": 0.003044846211617555,
+      "raw_times_sec": [
+        0.987213134765625,
+        1.0071730613708496,
+        1.0066478252410889
+      ],
+      "raw_peak_memory_MB": [
+        1.7956056594848633,
+        1.8015766143798828,
+        1.7947206497192383
+      ]
+    },
+    "CoreSet": {
+      "runs_ok": 3,
+      "runs_error": 0,
+      "errors": [],
+      "wall_time_sec_mean": 7.207268635431926,
+      "wall_time_sec_std": 0.07374915294200415,
+      "peak_memory_MB_mean": 0.022247314453125,
+      "peak_memory_MB_std": 0.0,
+      "raw_times_sec": [
+        7.270646095275879,
+        7.247314691543579,
+        7.103845119476318
+      ],
+      "raw_peak_memory_MB": [
+        0.022247314453125,
+        0.022247314453125,
+        0.022247314453125
+      ]
+    },
+    "RF Uncertainty": {
+      "runs_ok": 3,
+      "runs_error": 0,
+      "errors": [],
+      "wall_time_sec_mean": 0.8496173222859701,
+      "wall_time_sec_std": 0.012217719830548531,
+      "peak_memory_MB_mean": 1.1735893885294597,
+      "peak_memory_MB_std": 0.000861165032722872,
+      "raw_times_sec": [
+        0.8520677089691162,
+        0.8632044792175293,
+        0.8335797786712646
+      ],
+      "raw_peak_memory_MB": [
+        1.174668312072754,
+        1.172560691833496,
+        1.173539161682129
+      ]
+    },
+    "Random Sampling": {
+      "runs_ok": 3,
+      "runs_error": 0,
+      "errors": [],
+      "wall_time_sec_mean": 0.0,
+      "wall_time_sec_std": 0.0,
+      "peak_memory_MB_mean": 0.007892608642578125,
+      "peak_memory_MB_std": 1.0789593218788873e-05,
+      "raw_times_sec": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "raw_peak_memory_MB": [
+        0.007877349853515625,
+        0.007900238037109375,
+        0.007900238037109375
+      ]
+    }
+  },
+  "bootstrap_extrapolation": {
+    "warning": "EXTRAPOLATION: candidates resampled with replacement from the real pool to reach N=2000; not a second independent real measurement, reported only to show scaling trend.",
+    "n_pool_candidates": 2000,
+    "methods": {
+      "Quantum-Enhanced": {
+        "wall_time_sec": 1.1521964073181152,
+        "peak_memory_MB": 1.5343704223632812
+      },
+      "Uncertainty Sampling": {
+        "wall_time_sec": 0.08138298988342285,
+        "peak_memory_MB": 2.3288936614990234
+      },
+      "Query by Committee": {
+        "wall_time_sec": 1.5304627418518066,
+        "peak_memory_MB": 1.9798622131347656
+      },
+      "Expected Improvement": {
+        "wall_time_sec": 0.08504343032836914,
+        "peak_memory_MB": 3.8559045791625977
+      },
+      "Maximum Entropy": {
+        "wall_time_sec": 0.8452050685882568,
+        "peak_memory_MB": 3.2573938369750977
+      },
+      "Diversity Sampling": {
+        "wall_time_sec": 0.09332656860351562,
+        "peak_memory_MB": 0.7064609527587891
+      },
+      "BADGE": {
+        "wall_time_sec": 1.0017132759094238,
+        "peak_memory_MB": 5.1125288009643555
+      },
+      "CoreSet": {
+        "wall_time_sec": 22.323646545410156,
+        "peak_memory_MB": 0.08404541015625
+      },
+      "RF Uncertainty": {
+        "wall_time_sec": 0.929816484451294,
+        "peak_memory_MB": 3.255507469177246
+      },
+      "Random Sampling": {
+        "wall_time_sec": 0.001092672348022461,
+        "peak_memory_MB": 0.023349761962890625
+      }
+    }
+  }
+}
