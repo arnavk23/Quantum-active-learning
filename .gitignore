@@ -5,6 +5,10 @@ __pycache__/
 *.pyd
 .venv/
 .env
+*.egg-info/
+build/
+dist/
+.pytest_cache/
 
 # Jupyter Notebooks
 .ipynb_checkpoints/
@@ -17,11 +21,14 @@ __pycache__/
 *.bbl
 *.blg
 
-# Data and results
+# Real Materials Project data: large, regenerable via
+# src/quantum_al/fetch_data.py + a live MP_API_KEY. Not tracked.
 /data/*
 !/data/README.md
-/results/*
-!/results/README.md
+
+# results/ and figures/ ARE tracked: they are the evidence backing every
+# number in papers/, and results/SUMMARY.md is the human-readable source
+# of truth. Do not gitignore these.
 
 # VS Code
 .vscode/

@@ -1,222 +1,121 @@
-# Quantum-Enhanced Active Learning for Materials Discovery
+# quantum_al: Quantum-Inspired Active Learning for Materials Discovery
 
-This repository contains the complete implementation and research paper for "Quantum-Enhanced Active Learning for Accelerated Materials Discovery: A Novel Framework Combining Quantum Superposition and Multi-Observable Uncertainty Quantification".
+[![Tests](https://github.com/arnavk23/Quantum-active-learning/actions/workflows/tests.yml/badge.svg)](https://github.com/arnavk23/Quantum-active-learning/actions/workflows/tests.yml)
 
-## Key Achievements
+A Python package implementing a covariance-aware, quantum-inspired uncertainty
+formalism for active learning in materials discovery, benchmarked honestly
+against classical baselines on real Materials Project data, with a verified
+quantum circuit realization. See [`paper.md`](paper.md) for the software
+description (JOSS format) and [`papers/`](papers/) for the full research
+manuscripts.
 
-- **35% reduction** in required experiments for materials discovery
-- **Statistically significant improvements** (p < 0.01) over 9 state-of-the-art methods
-- **First quantum-enhanced active learning framework** specifically designed for materials science
+## Honest summary of findings
 
-### Python environment and running scripts
+A correctly-implemented, unit-tested version of the covariance-aware formalism
+(`src/quantum_al/operator.py`) was evaluated against 9 standard active-learning
+baselines on 5 real Materials Project regression tasks (band gap, formation
+energy, bulk modulus, magnetic moment, dielectric constant; ~1000 materials
+each). **As originally specified, the method does not outperform the
+baselines**: it loses on 4 of 5 tasks, no paired comparison survives
+Holm-Bonferroni correction, and an ablation study shows covariance coupling,
+the mechanism the method is built around, has an effect indistinguishable
+from noise (+0.07% R², vs. trial-to-trial σ of 5-8%).
 
-1) Create and activate a Python venv:
+Diagnosing the cause (the acquisition score never sees the downstream model's
+own residuals) and fixing it directly, by coupling the state encoding to a
+random forest's per-tree disagreement, brings the method to statistical
+parity with the best baseline on every task. A further ablation shows that
+parity comes entirely from the disagreement signal, not from the
+quantum-inspired covariance machinery, which remains inert or actively
+harmful throughout. A real quantum circuit realization (Qiskit) confirms the
+formalism matches its classical simulation exactly and characterizes its
+NISQ cost: hundreds of Pauli measurement terms per quantity, cut 4-12x by
+standard measurement grouping.
+
+Full results, diagnosis, and every real number behind the tables and figures:
+[`results/SUMMARY.md`](results/SUMMARY.md).
+
+An earlier version of this repository/paper claimed a 35% sample-efficiency
+improvement and p<0.01 significance over 9 baselines, and a formalism that
+worked as originally specified. Those numbers did not reproduce from any code
+in this repository when actually run and have been retracted; everything
+above is what the real, rerun experiments show.
+
+## Installation
 
 ```bash
-python3 -m venv .venv
-source .venv/bin/activate
-pip install --upgrade pip
-pip install -r requirements.txt
+git clone https://github.com/arnavk23/Quantum-active-learning.git
+cd Quantum-active-learning
+python -m venv .venv
+source .venv/bin/activate        # or .venv\Scripts\activate on Windows
+pip install -e ".[test,circuit]"
 ```
 
-2) Example: run a preprocessing or training script
+The `circuit` extra installs Qiskit and Qiskit Aer, needed only for
+`src/quantum_al/circuit.py` and the quantum-hardware-realization benchmark.
+The `test` extra installs pytest.
+
+## Verify the install
 
 ```bash
-python scripts/train_surrogate.py --help
-python scripts/download_preprocess_mp.py  # if you need to download dataset assets
+pytest tests/ -v
 ```
 
-## Scripts Overview
+This runs the correctness checks referenced throughout the papers: the
+classical-limit reduction proof (`tests/test_operator.py`), the
+circuit-vs-classical exact-match check (`tests/test_circuit.py`, skipped if
+Qiskit is not installed), and smoke tests for all 9 baselines
+(`tests/test_baselines.py`).
 
-### 1. `multi_property_optimization.py`
-**Purpose:** Demonstrates simultaneous optimization of multiple correlated material properties using coupled quantum observables.
+## Repository structure
 
-**Key Features:**
-- Generates synthetic dataset of 1000 compounds with 4 correlated properties: band gap, formation energy, elastic modulus, thermal conductivity
-- Realistic property correlations based on materials science domain knowledge (e.g., ρ(E_form, E_mod) = -0.58)
-- Coupled uncertainty aggregation using correlation matrix
-- Gaussian Process models for each property with joint selection criterion
+```
+src/quantum_al/       the installable package: the real, tested formalism
+  operator.py            core covariance-aware formalism (Eq. 1-6)
+  operator_v2.py         two failed narrow fix attempts (domain grouping, importance weighting)
+  operator_v3.py         the residual-coupled fix that reaches parity
+  circuit.py             real Qiskit circuit realization + NISQ resource tools
+  baselines.py           9 classical active-learning acquisition strategies
+  data_utils.py          load real Materials Project data
+  fetch_data.py          (re)fetch data from the Materials Project API
 
-**Output:**
-- `multi_property_results.json`: R² and MAE scores across 8 iterations for each property
-- `multi_property_results.png`: 4-panel visualization showing learning curves per property
+benchmarks/            runnable scripts that produced every table/figure
+  run_primary_benchmark.py       Tables III/IV: primary comparison + significance
+  run_improvement_attempt.py     the two failed narrow fixes
+  run_v3_test.py / run_v3_ablation.py / run_v3_all_tasks.py   the residual-coupled fix + its ablation
+  run_quantum_circuit_experiment.py   NISQ feasibility characterization
+  make_paper_figures.py          regenerates figures/*.pdf from results/*.json
 
-**Main Results:**
-- 3.2%-7.8% R² gains per iteration vs. independent property training
-- 22% sample cost reduction through transfer among properties
-- Effective handling of 4+ simultaneous objectives
+tests/                 pytest suite, run in CI on every push
+papers/                 full research manuscripts (IEEE-conference-style and
+                        npj-Computational-Materials-style versions) plus
+                        superseded prior drafts and reviewer feedback, kept
+                        for provenance
+figures/                figures embedded in the papers, generated from results/
+results/                raw JSON output backing every number in the papers (gitignored; regenerate via benchmarks/)
+data/                   real Materials Project data (gitignored; regenerate via src/quantum_al/fetch_data.py)
+```
 
-**Run:**
+## Regenerating the data and results
+
 ```bash
-python scripts/multi_property_optimization.py
+export MP_API_KEY=your_materials_project_api_key   # https://next-gen.materialsproject.org/api
+python -m quantum_al.fetch_data
+python benchmarks/run_primary_benchmark.py --stage all
+python benchmarks/run_v3_all_tasks.py
+python benchmarks/run_quantum_circuit_experiment.py   # needs the [circuit] extra
+python benchmarks/make_paper_figures.py
 ```
 
----
+## Citation
 
-### 2. `discrete_classification.py`
-**Purpose:** Extends framework from continuous regression to discrete classification tasks (crystal systems, stability classes).
+See [`CITATION.cff`](CITATION.cff), or cite the accompanying manuscript once
+published (see [`papers/`](papers/) for current drafts).
 
-**Key Features:**
-- Generates 1200 synthetic compounds with 6 discrete crystal system classes
-- Implements quantum-margin sampling: combines entropy (class probability uncertainty) with decision-boundary margins
-- Compares three strategies: quantum-margin, entropy-only, random sampling
-- Tracks both accuracy and weighted F1 score across 8 active learning iterations
+## Contributing
 
-**Output:**
-- `classification_results.json`: Accuracy and F1 scores for all three strategies
-- `classification_results.png`: 2-panel comparison (accuracy vs. F1 score)
+See [`CONTRIBUTING.md`](CONTRIBUTING.md).
 
-**Main Results:**
-- 3.5%-8.2% accuracy improvement via quantum-margin vs. entropy sampling
-- Final accuracy ≈91% on 6-class crystal system task (vs. 85% entropy baseline)
-- Demonstrates applicability beyond continuous property prediction
+## Contact
 
-**Run:**
-```bash
-python scripts/discrete_classification.py
-```
-
----
-
-### 3. `transfer_learning.py`
-**Purpose:** Validates transfer learning across materials families (oxides → sulfides/nitrides).
-
-**Key Features:**
-- Generates three family-specific datasets (oxides as source, sulfides/nitrides as targets)
-- Induces realistic domain shifts via family-dependent feature distributions
-- Compares transfer learning vs. training from scratch for each target family
-- Tracks R² evolution over 8 active learning iterations with 15-sample batches
-
-**Output:**
-- `transfer_learning_results.json`: R² and MAE for transfer vs. scratch approaches
-- `transfer_learning_results.png`: 2-panel side-by-side comparison for sulfides and nitrides
-
-**Main Results:**
-- Transfer learning reaches R²=0.82 within 6 iterations on sulfides
-- Training from scratch requires 7-8 iterations to match
-- Demonstrates that quantum-inspired uncertainty generalizes across materials classes
-- Enables knowledge reuse reducing sample cost by ~12-15%
-
-**Run:**
-```bash
-python scripts/transfer_learning.py
-```
-
----
-
-### 4. `spurious_correlation_analysis.py`
-**Purpose:** Identifies and analyzes failure modes when correlated uncertainty misleads selection in high-noise regimes.
-
-**Key Features:**
-- Generates datasets with controlled noise levels (σ = 0.01, 0.05, 0.1, 0.2, 0.5)
-- Compares true vs. empirical correlations as noise increases
-- Tracks correlation agreement, R², and MAE across 6 active learning iterations
-- Detects failure scenarios: noise > 0.1 + correlation error > 0.15 + final R² < 0.6
-
-**Output:**
-- `spurious_correlation_results.json`: Detailed metrics for all noise levels
-- `spurious_correlation_analysis.png`: 4-panel failure analysis
-  - Panel 1: Spurious correlation growth with noise
-  - Panel 2: True vs. empirical correlation divergence
-  - Panel 3: Model performance degradation
-  - Panel 4: Failure risk index heatmap
-
-**Main Results:**
-- At moderate noise (σ=0.1): correlation error ≈ 0.04, agreement > 0.85, safe operation
-- At high noise (σ ≥ 0.2): correlation error > 0.15, failure risk > 0.5
-- Recommends: (i) robust correlation estimators (Spearman, MCD); (ii) dynamic coupling weight reduction; (iii) real-time quality monitoring
-
-**Run:**
-```bash
-python scripts/spurious_correlation_analysis.py
-```
-
----
-
-## Requirements
-
-All scripts require:
-- NumPy
-- Matplotlib
-- scikit-learn
-- SciPy
-
-Install via:
-```bash
-pip install numpy matplotlib scikit-learn scipy
-```
-
----
-
-## Integration with Paper
-
-Results from these scripts populate the **Results & Discussion** section with:
-
-1. **Multi-Property Optimization subsection:**
-   - Quantifies gains from coupled observables (3.2%-7.8% R² improvement)
-   - Validates scalability to 4+ simultaneous objectives
-   - Demonstrates 22% sample cost reduction through property transfer
-
-2. **Discrete Classification subsection:**
-   - Extends framework beyond regression
-   - Shows 3.5%-8.2% accuracy gains over entropy sampling
-   - Demonstrates 91% accuracy on 6-class crystal system prediction
-
-3. **Transfer Learning subsection:**
-   - Validates knowledge transfer across materials families
-   - Shows R²=0.82 on target domain vs. R²=0.80 from scratch
-   - Quantifies 12-15% sample cost reduction
-
-4. **Spurious Covariance subsection:**
-   - Identifies failure modes in noisy regimes (σ > 0.2)
-   - Proposes mitigation strategies
-   - Demonstrates robust performance with quality control
-
----
-
-## Extending the Framework
-
-To adapt these scripts for your own datasets:
-
-### Multi-Property:
-```python
-from scripts.multi_property_optimization import MultiPropertyOptimizer
-
-# Define custom property names and correlations
-optimizer = MultiPropertyOptimizer(n_properties=4)
-optimizer.property_names = ['Your Property 1', 'Your Property 2', ...]
-optimizer.correlation_matrix = your_correlation_matrix
-results = optimizer.run_experiment(n_iterations=8, batch_size=15)
-```
-
-### Classification:
-```python
-from scripts.discrete_classification import DiscreteClassificationFramework
-
-classifier = DiscreteClassificationFramework(n_classes=6)
-# Implement custom generate_synthetic_classification_dataset() with your data
-results = classifier.run_experiment(n_iterations=8, batch_size=20)
-```
-
-### Transfer Learning:
-```python
-from scripts.transfer_learning import TransferLearningFramework
-
-framework = TransferLearningFramework()
-# Supply your own materials family datasets
-results = framework.run_full_experiment()
-```
-
-### Spurious Correlation:
-```python
-from scripts.spurious_correlation_analysis import SpuriousCorrelationDetector
-
-detector = SpuriousCorrelationDetector()
-detector.noise_levels = [0.01, 0.05, 0.1, 0.2, 0.5]  # Adjust as needed
-results = detector.run_noise_robustness_experiment()
-failure_scenarios = detector.identify_failure_scenarios(results)
-```
-
-### Contact
-
-If you use the methods or code here, please cite the manuscript once it is available. For questions, reproducibility requests, or collaboration, contact: Arnav Kapoor — arnavkapoor23@iiserb.ac.in
+Arnav Kapoor — arnavkapoor23@iiserb.ac.in

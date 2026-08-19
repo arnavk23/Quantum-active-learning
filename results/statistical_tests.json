@@ -1,0 +1,258 @@
+{
+  "band_gap": {
+    "quantum_final_r2": [
+      0.4472056040842831,
+      0.5718393870133206,
+      0.5213747836767684,
+      0.5486382468594717,
+      0.4762484968772316
+    ],
+    "comparisons": {
+      "Uncertainty Sampling": {
+        "n_paired": 5,
+        "quantum_mean_r2": 0.5130613037022151,
+        "baseline_mean_r2": 0.5966463268866619,
+        "mean_diff": -0.08358502318444679,
+        "t_statistic": -4.531010850750504,
+        "p_value_raw": 0.010569199760044222,
+        "shapiro_stat": 0.9534668252539875,
+        "shapiro_p": 0.7619168399255097,
+        "quantum_wins": false,
+        "p_value_holm_bonferroni": 0.07282807258876764,
+        "significant_at_0.05_after_correction": false
+      },
+      "Query by Committee": {
+        "n_paired": 5,
+        "quantum_mean_r2": 0.5130613037022151,
+        "baseline_mean_r2": 0.5957866860143886,
+        "mean_diff": -0.08272538231217355,
+        "t_statistic": -4.551719879170302,
+        "p_value_raw": 0.010404010369823948,
+        "shapiro_stat": 0.8979413605632274,
+        "shapiro_p": 0.3986122606874692,
+        "quantum_wins": false,
+        "p_value_holm_bonferroni": 0.07282807258876764,
+        "significant_at_0.05_after_correction": false
+      },
+      "Expected Improvement": {
+        "n_paired": 5,
+        "quantum_mean_r2": 0.5130613037022151,
+        "baseline_mean_r2": 0.5507793447312849,
+        "mean_diff": -0.03771804102906977,
+        "t_statistic": -1.006292668606061,
+        "p_value_raw": 0.37120785898443476,
+        "shapiro_stat": 0.8141875107668131,
+        "shapiro_p": 0.10522239357168778,
+        "quantum_wins": false,
+        "p_value_holm_bonferroni": 0.41017169699371137,
+        "significant_at_0.05_after_correction": false
+      },
+      "Maximum Entropy": {
+        "n_paired": 5,
+        "quantum_mean_r2": 0.5130613037022151,
+        "baseline_mean_r2": 0.5827494723507218,
+        "mean_diff": -0.0696881686485068,
+        "t_statistic": -4.9532882500619975,
+        "p_value_raw": 0.007743035391544868,
+        "shapiro_stat": 0.9391145056351158,
+        "shapiro_p": 0.6596846523383084,
+        "quantum_wins": false,
+        "p_value_holm_bonferroni": 0.06968731852390381,
+        "significant_at_0.05_after_correction": false
+      },
+      "Diversity Sampling": {
+        "n_paired": 5,
+        "quantum_mean_r2": 0.5130613037022151,
+        "baseline_mean_r2": 0.5530648737843503,
+        "mean_diff": -0.04000357008213522,
+        "t_statistic": -1.5119429482733278,
+        "p_value_raw": 0.20508584849685568,
+        "shapiro_stat": 0.9158249645259201,
+        "shapiro_p": 0.5033725095646552,
+        "quantum_wins": false,
+        "p_value_holm_bonferroni": 0.41017169699371137,
+        "significant_at_0.05_after_correction": false
+      },
+      "BADGE": {
+        "n_paired": 5,
+        "quantum_mean_r2": 0.5130613037022151,
+        "baseline_mean_r2": 0.5813656499012207,
+        "mean_diff": -0.06830434619900565,
+        "t_statistic": -3.755710096039643,
+        "p_value_raw": 0.019848536609355195,
+        "shapiro_stat": 0.907703243343245,
+        "shapiro_p": 0.45391206848376175,
+        "quantum_wins": false,
+        "p_value_holm_bonferroni": 0.09924268304677597,
+        "significant_at_0.05_after_correction": false
+      },
+      "CoreSet": {
+        "n_paired": 5,
+        "quantum_mean_r2": 0.5130613037022151,
+        "baseline_mean_r2": 0.5558053996258181,
+        "mean_diff": -0.042744095923603065,
+        "t_statistic": -2.9897461936797365,
+        "p_value_raw": 0.04034823434439897,
+        "shapiro_stat": 0.8640912887946851,
+        "shapiro_p": 0.24331326386225177,
+        "quantum_wins": false,
+        "p_value_holm_bonferroni": 0.16139293737759589,
+        "significant_at_0.05_after_correction": false
+      },
+      "RF Uncertainty": {
+        "n_paired": 5,
+        "quantum_mean_r2": 0.5130613037022151,
+        "baseline_mean_r2": 0.5827494723507218,
+        "mean_diff": -0.0696881686485068,
+        "t_statistic": -4.9532882500619975,
+        "p_value_raw": 0.007743035391544868,
+        "shapiro_stat": 0.9391145056351158,
+        "shapiro_p": 0.6596846523383084,
+        "quantum_wins": false,
+        "p_value_holm_bonferroni": 0.06968731852390381,
+        "significant_at_0.05_after_correction": false
+      },
+      "Random Sampling": {
+        "n_paired": 5,
+        "quantum_mean_r2": 0.5130613037022151,
+        "baseline_mean_r2": 0.580551657195767,
+        "mean_diff": -0.06749035349355195,
+        "t_statistic": -2.8580743725430464,
+        "p_value_raw": 0.04601885463946771,
+        "shapiro_stat": 0.9302303647644199,
+        "shapiro_p": 0.5979423115433092,
+        "quantum_wins": false,
+        "p_value_holm_bonferroni": 0.16139293737759589,
+        "significant_at_0.05_after_correction": false
+      }
+    }
+  },
+  "formation_energy": {
+    "quantum_final_r2": [
+      0.8106909915311071,
+      0.8340961417168972,
+      0.8614383496339155,
+      0.8671629673421888,
+      0.7498989258230537
+    ],
+    "comparisons": {
+      "Uncertainty Sampling": {
+        "n_paired": 5,
+        "quantum_mean_r2": 0.8246574752094326,
+        "baseline_mean_r2": 0.8223741631452499,
+        "mean_diff": 0.002283312064182441,
+        "t_statistic": 0.178359020255527,
+        "p_value_raw": 0.8671099482067024,
+        "shapiro_stat": 0.9306215605900199,
+        "shapiro_p": 0.6006152957562336,
+        "quantum_wins": true,
+        "p_value_holm_bonferroni": 1.0,
+        "significant_at_0.05_after_correction": false
+      },
+      "Query by Committee": {
+        "n_paired": 5,
+        "quantum_mean_r2": 0.8246574752094326,
+        "baseline_mean_r2": 0.8413983800284426,
+        "mean_diff": -0.016740904819010048,
+        "t_statistic": -1.995570909101348,
+        "p_value_raw": 0.11670537209115509,
+        "shapiro_stat": 0.8600055561989546,
+        "shapiro_p": 0.228268310207064,
+        "quantum_wins": false,
+        "p_value_holm_bonferroni": 0.5835268604557754,
+        "significant_at_0.05_after_correction": false
+      },
+      "Expected Improvement": {
+        "n_paired": 5,
+        "quantum_mean_r2": 0.8246574752094326,
+        "baseline_mean_r2": 0.8012208372685261,
+        "mean_diff": 0.023436637940906446,
+        "t_statistic": 2.2172190414055293,
+        "p_value_raw": 0.09089293895784174,
+        "shapiro_stat": 0.9227285631931148,
+        "shapiro_p": 0.5476927710585103,
+        "quantum_wins": true,
+        "p_value_holm_bonferroni": 0.5453576337470505,
+        "significant_at_0.05_after_correction": false
+      },
+      "Maximum Entropy": {
+        "n_paired": 5,
+        "quantum_mean_r2": 0.8246574752094326,
+        "baseline_mean_r2": 0.8526366506217228,
+        "mean_diff": -0.027979175412290225,
+        "t_statistic": -2.58775525369446,
+        "p_value_raw": 0.06082768919481889,
+        "shapiro_stat": 0.9642742570444738,
+        "shapiro_p": 0.8373871520941432,
+        "quantum_wins": false,
+        "p_value_holm_bonferroni": 0.4866215135585511,
+        "significant_at_0.05_after_correction": false
+      },
+      "Diversity Sampling": {
+        "n_paired": 5,
+        "quantum_mean_r2": 0.8246574752094326,
+        "baseline_mean_r2": 0.7704623082058062,
+        "mean_diff": 0.054195167003626275,
+        "t_statistic": 5.63532468508802,
+        "p_value_raw": 0.004879693349591384,
+        "shapiro_stat": 0.9599457652907766,
+        "shapiro_p": 0.8076055364165274,
+        "quantum_wins": true,
+        "p_value_holm_bonferroni": 0.04391724014632245,
+        "significant_at_0.05_after_correction": true
+      },
+      "BADGE": {
+        "n_paired": 5,
+        "quantum_mean_r2": 0.8246574752094326,
+        "baseline_mean_r2": 0.83721630089039,
+        "mean_diff": -0.012558825680957453,
+        "t_statistic": -0.8919832872824359,
+        "p_value_raw": 0.4228115410968766,
+        "shapiro_stat": 0.9557423503189844,
+        "shapiro_p": 0.7780689594904829,
+        "quantum_wins": false,
+        "p_value_holm_bonferroni": 1.0,
+        "significant_at_0.05_after_correction": false
+      },
+      "CoreSet": {
+        "n_paired": 5,
+        "quantum_mean_r2": 0.8246574752094326,
+        "baseline_mean_r2": 0.8316898539818289,
+        "mean_diff": -0.007032378772396553,
+        "t_statistic": -0.5378133700993308,
+        "p_value_raw": 0.6192332872635558,
+        "shapiro_stat": 0.9393495901803506,
+        "shapiro_p": 0.6613434776128586,
+        "quantum_wins": false,
+        "p_value_holm_bonferroni": 1.0,
+        "significant_at_0.05_after_correction": false
+      },
+      "RF Uncertainty": {
+        "n_paired": 5,
+        "quantum_mean_r2": 0.8246574752094326,
+        "baseline_mean_r2": 0.8526366506217228,
+        "mean_diff": -0.027979175412290225,
+        "t_statistic": -2.58775525369446,
+        "p_value_raw": 0.06082768919481889,
+        "shapiro_stat": 0.9642742570444738,
+        "shapiro_p": 0.8373871520941432,
+        "quantum_wins": false,
+        "p_value_holm_bonferroni": 0.4866215135585511,
+        "significant_at_0.05_after_correction": false
+      },
+      "Random Sampling": {
+        "n_paired": 5,
+        "quantum_mean_r2": 0.8246574752094326,
+        "baseline_mean_r2": 0.8098797364345589,
+        "mean_diff": 0.014777738774873561,
+        "t_statistic": 1.4388431039143608,
+        "p_value_raw": 0.22359286179988588,
+        "shapiro_stat": 0.9664843577956908,
+        "shapiro_p": 0.8522464430798742,
+        "quantum_wins": true,
+        "p_value_holm_bonferroni": 0.8943714471995435,
+        "significant_at_0.05_after_correction": false
+      }
+    }
+  }
+}
