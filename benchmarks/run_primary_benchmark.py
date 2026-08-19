@@ -1,35 +1,12 @@
-"""
-Real-data benchmark suite for the quantum-inspired active learning paper.
+"""Benchmark suite on data/*.json (see quantum_al.fetch_data):
 
-Runs, on genuine Materials Project data (data/*.json, from
-src/quantum_al/fetch_data.py), all of:
+  primary      quantum vs 9 baselines, 5 tasks, 5 trials, 8 iterations
+  stats        paired t-tests + Holm-Bonferroni + Shapiro-Wilk, band_gap/formation_energy
+  ablation     full model vs 4 ablated variants, band_gap
+  sensitivity  K=2,3,6 + best/worst-of-N K=3 combinations
+  runtime      wall-clock time + peak memory, all 10 methods
 
-  1. Primary benchmark (paper Table III): quantum method vs 9 baselines,
-     5 regression tasks, 5 trials, 8 AL iterations.
-  2. Statistical significance tests (paper Table IV): paired t-tests +
-     Holm-Bonferroni correction + Shapiro-Wilk normality check, on
-     band_gap and formation_energy.
-  3. Ablation study (paper Table V): full model vs 4 ablated variants,
-     on band_gap.
-  4. Observable sensitivity (paper "Observable sensitivity" subsection):
-     K=2,3,6 observables, plus best/worst-of-N K=3 combinations.
-  5. Runtime & memory benchmark (paper Table VI): wall-clock time and
-     peak memory for all 10 methods on the real pool size.
-
-Every number is computed from an actual run of quantum_al.operator's
-QuantumObservableBank and the 9 baseline selectors in
-quantum_al.baselines -- nothing here is hardcoded or simulated. If a run
-fails, the failure is recorded in the JSON output (and must be reported
-honestly in results/SUMMARY.md), not papered over with a plausible-
-looking number.
-
-Usage (after `pip install -e .` from the repo root):
-    python benchmarks/run_primary_benchmark.py --stage primary
-    python benchmarks/run_primary_benchmark.py --stage stats
-    python benchmarks/run_primary_benchmark.py --stage ablation
-    python benchmarks/run_primary_benchmark.py --stage sensitivity
-    python benchmarks/run_primary_benchmark.py --stage runtime
-    python benchmarks/run_primary_benchmark.py --stage all
+Usage: python benchmarks/run_primary_benchmark.py --stage {primary,stats,ablation,sensitivity,runtime,all}
 """
 import argparse
 import copy
@@ -68,11 +45,7 @@ TRIAL_SEEDS = list(range(N_TRIALS))
 PRIMARY_TASKS_FOR_STATS = ["band_gap", "formation_energy"]
 
 
-# ----------------------------------------------------------------------
-# Quantum method adapter: matches the .select_next_experiments(...) API
-# used by the 9 baselines. Pure ranking by U_total -- no predictor is
-# trained as part of the acquisition rule itself, per the paper.
-# ----------------------------------------------------------------------
+# Adapter matching the baselines' .select_next_experiments(...) interface.
 class QuantumSelector:
     def __init__(self, d, feature_groups=None, seed=0, use_covariance=True,
                  commuting_only=False, real_only_coeff=False, name="Quantum-Enhanced"):
@@ -114,9 +87,7 @@ def run_al_trial(method_factory, X_pool, y_pool, X_test, y_test, trial_seed,
     labeled_idx = perm[:n0].tolist()
     remaining = perm[n0:].tolist()
 
-    # Deterministic, trial+method-specific seed for baseline internals that
-    # rely on the *global* np.random state (CoreSet's random start point,
-    # Random Sampling, etc.) rather than a passed-in RandomState.
+    # CoreSet/Random Sampling use global np.random state, not a RandomState arg.
     np.random.seed(trial_seed * 10007 + method_seed_offset)
 
     method = method_factory()
@@ -437,25 +408,18 @@ def default_feature_groups_k(d, k):
 
 
 def named_k3_combinations(d):
-    """3-4 different combinations of exactly 3 observable-groups, built
-    from different feature-index splits of the same 21-d feature vector,
-    for the 'best vs worst combination' comparison."""
+    """4 different 3-observable-group index splits, for best-vs-worst comparison."""
     combos = {}
-    # (a) manuscript default: structural/electronic/thermodynamic contiguous thirds
     combos["default_thirds"] = default_feature_groups(d)
-    # (b) reversed order of index assignment (thermo gets the first block, etc.)
     g = default_feature_groups(d)
     names = list(g.keys())
     vals = list(g.values())
     combos["reversed_assignment"] = {names[0]: vals[2], names[1]: vals[1], names[2]: vals[0]}
-    # (c) fine/coarse split: first group narrow (first 3 idx), second group
-    # the middle bulk, third group the remaining tail
     combos["narrow_first_wide_rest"] = {
         "structural": list(range(0, 3)),
         "electronic": list(range(2, d - 2)),
         "thermodynamic": list(range(d - 3, d)),
     }
-    # (d) non-overlapping equal thirds (no boundary overlap, unlike default)
     third = d // 3
     combos["disjoint_thirds"] = {
         "structural": list(range(0, third)),

@@ -1,6 +1,5 @@
-"""Ablation on the v3 (residual-coupled) quantum variant: does the
-covariance-aware aggregation add anything on top of plain ensemble
-disagreement, now that the basis is genuinely tied to model uncertainty?"""
+"""Ablation on v3: does covariance aggregation add anything over plain
+ensemble disagreement?"""
 import json
 import os
 import sys

@@ -1,9 +1,5 @@
-"""
-Tests the two principled improvements in quantum_operator_v2.py against the
-original faithful implementation, on the same protocol as the primary
-benchmark. Reports whatever actually happens -- this is a single,
-pre-specified round of improvement, not an iterate-until-it-wins search.
-"""
+"""Tests operator_v2.py's two fixes against the original, same protocol
+as the primary benchmark."""
 import json
 import os
 import sys

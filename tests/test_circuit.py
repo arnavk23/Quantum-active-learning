@@ -1,14 +1,6 @@
-"""
-Correctness test for the real quantum circuit realization
-(quantum_al.circuit). Verifies the circuit-measured variance and
-covariance, computed via exact statevector simulation, match the
-classical closed-form formalism (quantum_al.operator) to floating-point
-precision. This is the check that confirms the circuit and the classical
-formula compute the same mathematical object, not merely an analogous
-one; see the "Quantum Hardware Realization" section of papers/.
-
-Skipped automatically if qiskit / qiskit-aer are not installed (they are
-an optional dependency, `pip install -e ".[circuit]"`).
+"""Checks quantum_al.circuit's statevector-simulated variance/covariance
+match quantum_al.operator's classical formula exactly. Skipped if qiskit
+isn't installed (pip install -e ".[circuit]").
 """
 import numpy as np
 import pytest

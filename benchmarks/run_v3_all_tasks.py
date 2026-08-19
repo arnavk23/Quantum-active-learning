@@ -1,8 +1,5 @@
-"""Extend the residual-coupled quantum variant (v3) and its ablation
-(full covariance / no covariance / single-group) to all 5 real regression
-tasks, same protocol as the primary benchmark (5 trials, 8 iterations).
-Also runs paired t-tests of v3-full against each task's best baseline
-(from results/primary_benchmark_summary.json)."""
+"""v3 + its ablation on all 5 tasks, same protocol as the primary
+benchmark, plus paired t-tests against each task's best baseline."""
 import json
 import os
 import sys
