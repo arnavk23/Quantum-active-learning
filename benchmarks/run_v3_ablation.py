@@ -10,7 +10,9 @@ import numpy as np
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 ROOT_DIR = os.path.dirname(SCRIPT_DIR)
 RESULTS_DIR = os.path.join(ROOT_DIR, "results")
-sys.path.insert(0, SCRIPT_DIR)
+sys.path.insert(0, SCRIPT_DIR)  # only for sibling benchmarks/*.py scripts below,
+# which are standalone (not part of the installed quantum_al package);
+# quantum_al.* imports themselves work without this once pip-installed.
 
 from run_primary_benchmark import run_al_trial, prepare_task_split, TRIAL_SEEDS  # noqa: E402
 from quantum_al.operator_v3 import TreeEnsembleQuantumSelector  # noqa: E402

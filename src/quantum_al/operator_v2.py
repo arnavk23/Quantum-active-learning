@@ -37,23 +37,15 @@ Both changes are reported honestly regardless of outcome; see
 results/improvement_attempt.json / results/SUMMARY.md for what actually
 happened when this was run.
 """
+import warnings
+
 import numpy as np
 from sklearn.ensemble import RandomForestRegressor
 
 from quantum_al.operator import (
     QuantumObservableBank, encode_states, feature_phase_weights, softmax,
 )
-
-# Column order must match scripts/data_utils.py FEATURE_COLUMNS exactly.
-FEATURE_COLUMNS = [
-    "nelements", "density", "volume_per_atom", "nsites", "energy_above_hull",
-    "space_group_number",
-    "X_mean", "X_std", "X_range",
-    "atomic_radius_mean", "atomic_radius_std", "atomic_radius_range",
-    "atomic_mass_mean", "atomic_mass_std", "atomic_mass_range",
-    "row_mean", "row_std", "row_range",
-    "group_mean", "group_std", "group_range",
-]
+from quantum_al.data_utils import FEATURE_COLUMNS
 
 DOMAIN_GROUPS_BY_NAME = {
     # geometry / coordination
@@ -93,15 +85,23 @@ class ImportanceWeightedQuantumSelector:
         self.n_estimators = n_estimators
 
     def _importance_weights(self, X_train, y_train, d):
+        """Falls back to uniform weighting only for the specific,
+        anticipated case of too few labeled samples for RF fitting
+        (ValueError from scikit-learn) -- not a blanket except, so
+        unexpected bugs (e.g. shape mismatches from a caller error) still
+        raise instead of being silently masked."""
         try:
             rf = RandomForestRegressor(n_estimators=self.n_estimators, random_state=0)
             rf.fit(X_train, y_train)
-            imp = rf.feature_importances_
-            imp = np.clip(imp, 1e-6, None)
-            w = np.sqrt(imp / imp.mean())
-            return w
-        except Exception:
+        except ValueError as e:
+            warnings.warn(
+                f"RandomForest fit failed ({e}); falling back to uniform "
+                "importance weights for this iteration."
+            )
             return np.ones(d)
+        imp = rf.feature_importances_
+        imp = np.clip(imp, 1e-6, None)
+        return np.sqrt(imp / imp.mean())
 
     def select_next_experiments(self, X_candidates, X_train, y_train, n_select=10):
         d = X_train.shape[1]

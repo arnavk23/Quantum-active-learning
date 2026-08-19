@@ -27,10 +27,14 @@ Two honest, separate things are reported, not conflated:
      is reported either way.
 """
 import numpy as np
-from qiskit import QuantumCircuit
-from qiskit.circuit.library import StatePreparation
-from qiskit.quantum_info import SparsePauliOp, Statevector
-from qiskit.primitives import StatevectorEstimator
+try:
+    from qiskit import QuantumCircuit
+    from qiskit.circuit.library import StatePreparation
+    from qiskit.quantum_info import SparsePauliOp, Statevector
+    from qiskit.primitives import StatevectorEstimator
+    _HAVE_QISKIT = True
+except ImportError:
+    _HAVE_QISKIT = False
 
 try:
     from qiskit_aer.primitives import EstimatorV2 as AerEstimatorV2
@@ -38,6 +42,14 @@ try:
     _HAVE_AER = True
 except ImportError:
     _HAVE_AER = False
+
+
+def _require_qiskit():
+    if not _HAVE_QISKIT:
+        raise ImportError(
+            "quantum_al.circuit requires qiskit, which is not installed. "
+            "Install it with: pip install -e '.[circuit]'"
+        )
 
 
 def n_qubits_for_dim(d):
@@ -71,6 +83,7 @@ def pad_observable(O, n_qubits):
 
 def amplitude_encoding_circuit(alpha, n_qubits=None):
     """Real state-preparation circuit for |psi> = sum_j alpha_j |j>."""
+    _require_qiskit()
     if n_qubits is None:
         n_qubits = n_qubits_for_dim(len(alpha))
     padded = pad_amplitudes(alpha, n_qubits)
@@ -94,6 +107,7 @@ def pauli_decompose(O_padded):
     then drop only genuinely-zero (float roundoff, <1e-12) terms
     ourselves.
     """
+    _require_qiskit()
     op = SparsePauliOp.from_operator(O_padded, atol=0, rtol=0)
     mask = np.abs(op.coeffs) > 1e-12
     op = SparsePauliOp(op.paulis[mask], op.coeffs[mask])
@@ -105,6 +119,7 @@ def exact_circuit_expectation(qc, pauli_op):
     simulation of the actual circuit (StatePreparation + measurement),
     using Qiskit's reference Estimator -- this is what the circuit
     computes in the ideal limit, not a shortcut."""
+    _require_qiskit()
     estimator = StatevectorEstimator()
     job = estimator.run([(qc, pauli_op)])
     result = job.result()[0]
@@ -112,9 +127,8 @@ def exact_circuit_expectation(qc, pauli_op):
 
 
 def shot_based_expectation(qc, pauli_op, shots, noise_model=None, seed=0):
-    """Finite-shot expectation value estimate via AerEstimatorV2. `shots`
-    is converted to an equivalent target precision (1/sqrt(shots)),
-    matching how a real device's measurement statistics would scale.
+    """Finite-shot expectation value estimate via AerEstimatorV2.
+
     Aer's simulator backend does not accept the high-level
     StatePreparation instruction directly, so the circuit is decomposed
     to elementary gates first (this is exactly what a real backend's

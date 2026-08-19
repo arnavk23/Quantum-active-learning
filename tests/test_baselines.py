@@ -40,3 +40,21 @@ def test_baseline_selects_valid_batch(name, method_attr, toy_data):
     assert selected_idx.min() >= 0
     assert selected_idx.max() < len(X_candidates)
     assert len(set(selected_idx.tolist())) == n_select  # no duplicates
+
+
+@pytest.mark.parametrize("name,method_attr", BASELINE_METHODS)
+def test_baseline_handles_large_n_select(name, method_attr, toy_data):
+    """The benchmark harness (benchmarks/run_primary_benchmark.py) relies
+    on every selector tolerating n_select > len(X_candidates) without
+    raising, clamping to the available pool instead."""
+    X_candidates, X_train, y_train = toy_data
+    selector = getattr(BaselineFactory(), method_attr)()
+    n_select = len(X_candidates) + 10
+    selected_idx, scores, info = selector.select_next_experiments(
+        X_candidates, X_train, y_train, n_select=n_select
+    )
+    selected_idx = np.asarray(selected_idx)
+    assert len(selected_idx) == len(X_candidates)
+    assert selected_idx.min() >= 0
+    assert selected_idx.max() < len(X_candidates)
+    assert len(set(selected_idx.tolist())) == len(X_candidates)
