@@ -1,11 +1,5 @@
-"""
-Correctness tests for the core covariance-aware quantum-inspired
-formalism (quantum_al.operator). These wrap the same checks the module's
-own self_test() performs, as proper pytest assertions: non-commutativity
-of the default observable bank, and the exact classical-limit reduction
-(Proposition 2 in the papers) when observables commute, coefficients are
-real, and covariance is dropped.
-"""
+"""Correctness tests for quantum_al.operator: non-commutativity of the
+default bank, exact classical-limit reduction, state normalization."""
 import numpy as np
 import pytest
 

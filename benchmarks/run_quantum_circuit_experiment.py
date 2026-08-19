@@ -1,13 +1,6 @@
-"""
-NISQ feasibility characterization for the operator formalism, on real
-band-gap candidates: qubit/gate resources, Pauli measurement overhead
-scaling with K, and shot/noise sensitivity of the resulting acquisition
-RANKING (not just raw expectation-value error) relative to the exact
-(noiseless, infinite-shot) computation, which we already proved matches
-the classical closed-form exactly (quantum_al.circuit.self_test).
-
-This is a resource/feasibility study, not a performance claim: it reports
-whatever it finds, favorable or not.
+"""NISQ resource characterization on real band-gap candidates: qubit/gate
+counts, Pauli measurement overhead vs K, shot/noise sensitivity of the
+acquisition ranking vs the exact statevector computation.
 """
 import json
 import os

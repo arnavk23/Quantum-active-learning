@@ -1,24 +1,7 @@
-"""
-Shared data loading for the real-data benchmark suite.
-
-Loads the real Materials Project derived JSON files in data/ (produced by
-scripts/fetch_real_materials_data.py) and extracts the 21 numeric,
-composition/structure-derived feature columns plus the task target.
-
-Feature columns (21 total, in fixed order):
-  6 structural/summary descriptors:
-    nelements, density, volume_per_atom, nsites, energy_above_hull,
-    space_group_number
-  15 composition-derived statistics:
-    X_mean, X_std, X_range,
-    atomic_radius_mean, atomic_radius_std, atomic_radius_range,
-    atomic_mass_mean, atomic_mass_std, atomic_mass_range,
-    row_mean, row_std, row_range,
-    group_mean, group_std, group_range
-
-`crystal_system` is excluded from the regression feature set (it is
-categorical and is itself the target for the classification task); it is
-kept as metadata only.
+"""Loads Materials Project JSON files from data/ (see fetch_data.py) into
+(X, y, meta) arrays. 21 feature columns: 6 structural/summary descriptors
++ 15 composition-derived stats. crystal_system is metadata only for
+regression tasks (it's the target for the classification task).
 """
 import json
 import os
@@ -47,10 +30,8 @@ CLASSIFICATION_TASK = "crystal_system"
 
 
 def load_task(name, drop_na=True):
-    """Load a task JSON file from data/ and return (X, y, meta) where X is
-    an (N, 21) float array in FEATURE_COLUMNS order, y is an (N,) array
-    (float for regression tasks, str labels for crystal_system), and meta
-    is a list of dicts with material_id/formula_pretty/crystal_system."""
+    """(X, y, meta) for a task JSON in data/. y is float, except str labels
+    for crystal_system."""
     path = os.path.join(DATA_DIR, f"{name}.json")
     with open(path, "r") as f:
         rows = json.load(f)
@@ -80,8 +61,7 @@ def load_task(name, drop_na=True):
 
 
 def standardize(X_train, *others):
-    """Fit mean/std on X_train, apply to X_train and any number of other
-    arrays. Returns standardized arrays in the same order (X_train first)."""
+    """Fit mean/std on X_train, apply to X_train and any other arrays."""
     mu = X_train.mean(axis=0)
     sigma = X_train.std(axis=0)
     sigma[sigma < 1e-12] = 1.0

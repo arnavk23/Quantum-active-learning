@@ -1,7 +1,5 @@
-"""Quick test of the residual-coupled quantum variant (v3) on band_gap,
-same protocol as the primary benchmark, before deciding whether to extend
-to all 5 tasks. Compares against the original quantum method and the two
-strongest real baselines (Uncertainty Sampling, QBC)."""
+"""v3 on band_gap vs the original method and top baselines (Uncertainty
+Sampling, QBC), same protocol as the primary benchmark."""
 import json
 import os
 import sys

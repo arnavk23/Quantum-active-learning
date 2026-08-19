@@ -1,31 +1,9 @@
-"""
-Fetch real Materials Project data and build honest feature vectors.
-
-Replaces the fully-synthetic datasets previously used in benchmark.py /
-runtime_memory_benchmarks.py / observable_sensitivity_analysis.py. Every
-property pulled here is a genuine DFT-derived quantity from the Materials
-Project; no target values are hand-simulated.
-
-Tasks pulled (only properties actually available at scale in MP):
-  - band_gap                      (regression)
-  - formation_energy_per_atom     (regression)
-  - bulk_modulus (K_vrh)          (regression, elastic modulus proxy)
-  - total_magnetization           (regression, magnetic moment)
-  - e_total (dielectric constant) (regression)
-  - crystal_system                (6-class classification)
-
-Thermal conductivity is NOT pulled: MP does not carry broad computed
-thermal-conductivity data, so this task is dropped rather than
-simulated. This is a deliberate, documented deviation from the original
-manuscript's six-task claim.
-
-Features: composition-derived statistics (electronegativity, atomic
-radius, atomic mass, ionization energy, row, group -- weighted mean/std/
-range over the stoichiometric composition) plus structural/summary
-descriptors available directly from the MP summary endpoint (density,
-volume per atom, nsites, number of elements, energy above hull, space
-group number). This is a real, if lower-dimensional (~40-d, not 100-d),
-feature vector -- the paper text is updated to match this honestly.
+"""Fetches real Materials Project data: band_gap, formation_energy_per_atom,
+bulk_modulus, total_magnetization, e_total (regression), crystal_system
+(classification). Thermal conductivity is skipped, not available at
+scale in MP. Features: composition stats (electronegativity, atomic
+radius, atomic mass, row, group) plus MP summary fields (density, volume
+per atom, nsites, nelements, energy above hull, space group).
 """
 import json
 import os
@@ -127,10 +105,8 @@ ELEMENT_PROPS = ["X", "atomic_radius", "atomic_mass", "row", "group"]
 
 
 def composition_features(elements):
-    """Weighted mean/std/range over element properties for a uniform (unweighted
-    element-set) composition proxy -- MP summary doesn't return stoichiometric
-    fractions cheaply, so we use the unique element set, which is the
-    information actually available without a second per-material request."""
+    """Mean/std/range over element properties for the unique element set
+    (MP summary doesn't return stoichiometric fractions cheaply)."""
     vals = {p: [] for p in ELEMENT_PROPS}
     for el_str in elements:
         try:

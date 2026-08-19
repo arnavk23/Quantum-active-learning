@@ -1,8 +1,8 @@
-"""quantum_al: a covariance-aware, quantum-inspired uncertainty formalism
-for active learning, benchmarked honestly against classical baselines on
-real Materials Project data, with a verified quantum circuit realization.
+"""Covariance-aware quantum-inspired uncertainty formalism for active
+learning, benchmarked against classical baselines on real Materials
+Project data, with a quantum circuit realization.
 
-Key entry points:
+Entry points:
     quantum_al.operator.QuantumObservableBank   -- the core formalism (Eq. 1-6)
     quantum_al.operator_v3.TreeEnsembleQuantumSelector -- the residual-coupled fix
     quantum_al.circuit                          -- real Qiskit circuit realization

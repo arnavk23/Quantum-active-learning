@@ -1,11 +1,4 @@
-"""
-Smoke tests for the 9 classical active-learning baselines
-(quantum_al.baselines). Uses small synthetic arrays, not real Materials
-Project data (which needs a live API key), so these run in any CI
-environment without network access. The goal is only to verify each
-selector returns a valid selection on a toy regression problem, not to
-reproduce any paper result.
-"""
+"""Smoke tests for quantum_al.baselines on synthetic data (no API key needed)."""
 import numpy as np
 import pytest
 
@@ -44,9 +37,7 @@ def test_baseline_selects_valid_batch(name, method_attr, toy_data):
 
 @pytest.mark.parametrize("name,method_attr", BASELINE_METHODS)
 def test_baseline_handles_large_n_select(name, method_attr, toy_data):
-    """The benchmark harness (benchmarks/run_primary_benchmark.py) relies
-    on every selector tolerating n_select > len(X_candidates) without
-    raising, clamping to the available pool instead."""
+    """n_select > len(X_candidates) should clamp, not raise."""
     X_candidates, X_train, y_train = toy_data
     selector = getattr(BaselineFactory(), method_attr)()
     n_select = len(X_candidates) + 10

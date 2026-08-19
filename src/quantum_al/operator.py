@@ -1,29 +1,13 @@
-"""
-Quantum-inspired covariance-aware uncertainty formalism.
+"""Covariance-aware quantum-inspired uncertainty formalism.
 
-Implements Definition 1 (state encoding), Eq. (2) (Hermitian observables),
-Eq. (3) (variance), Eq. (4) (symmetrized covariance), Eq. (5) (complex
-coupled acquisition score U_total), and Proposition 2 (classical-limit
-reduction) exactly as specified in the manuscript, in place of the
-disconnected sin/cos pseudo-code that previously stood in for this
-formalism (scripts/quantum_learning.py).
+Implements state encoding (Def. 1), Hermitian observables (Eq. 2),
+variance (Eq. 3), symmetrized covariance (Eq. 4), acquisition score
+U_total (Eq. 5), and the classical-limit reduction (Prop. 2).
 
-Modeling choices not fully pinned down by the manuscript text are made
-explicit here:
-  - p_ij (Definition 1): softmax of squared standardized feature values,
-    so sum_j p_ij = 1 by construction.
-  - phi_ij (Definition 1): phase for feature j is the mean absolute
-    Pearson correlation of feature j with the other features, estimated
-    over the current labeled pool, scaled to [0, pi]. This is constant
-    across i for a given labeled set (recomputed each AL iteration), i.e.
-    the phase depends on the feature's role in the current correlation
-    structure, not on the individual candidate.
-  - Observable weight matrices W^(k): Hermitian matrices with elevated
-    weight on a designated feature-index group per observable
-    (structural / electronic / thermodynamic), normalized to unit
-    spectral norm, with small nonzero cross terms so that
-    W^(struct) W^(elec) != W^(elec) W^(struct) (non-commutativity by
-    construction, verified in self_test()).
+p_ij = softmax(x_ij^2). phi_j = pi * mean abs correlation of feature j
+with the rest, over the current labeled pool (recomputed per iteration,
+same for all candidates). W^(k) are Hermitian, weighted toward one
+feature group each, unit spectral norm, non-commuting by construction.
 """
 import numpy as np
 
@@ -75,22 +59,15 @@ def make_observable(d, feature_group, seed, cross_weight=0.15, block_boost=2.5):
 
 
 class QuantumObservableBank:
-    """K Hermitian observables with complex coupling coefficients, matching
-    Eqs. (1)-(6) of the manuscript."""
+    """K Hermitian observables with complex coupling coefficients (Eq. 1-6)."""
 
     def __init__(self, d, feature_groups, coefficients=None, seed=0,
                  commuting_only=False, real_only_coeff=False):
-        """
-        feature_groups: dict name -> list of feature indices (defines the
-            block each observable is concentrated on).
-        coefficients: dict name -> complex coefficient alpha_k. Defaults to
-            the manuscript's configuration for K=3
-            (alpha_struct=1.0, alpha_elec=1.2 e^{i pi/4}, alpha_thermo=0.8),
-            extended with unit real coefficients for any extra observables.
-        commuting_only: if True, build diagonal (hence mutually commuting)
-            observables -- used for the ablation / classical-limit checks.
-        real_only_coeff: if True, coerce all coefficients to their real part
-            (imag = 0) -- used for the "real-only coefficients" ablation.
+        """feature_groups: name -> feature indices per observable.
+        coefficients: name -> complex alpha_k, defaults to
+            (1.0, 1.2e^{i pi/4}, 0.8) for structural/electronic/thermodynamic.
+        commuting_only: diagonal observables, for the classical-limit ablation.
+        real_only_coeff: drop imaginary part of coefficients, for that ablation.
         """
         self.d = d
         self.names = list(feature_groups.keys())
@@ -122,9 +99,7 @@ class QuantumObservableBank:
         self.alpha = coefficients
 
     def commutator_norm(self):
-        """Frobenius norm of [O_k, O_l] summed over all pairs -- 0 iff all
-        observables commute. Used by self_test() to verify non-commutativity
-        by construction."""
+        """Sum of ||[O_k, O_l]|| over all pairs; 0 iff all observables commute."""
         total = 0.0
         for i, a in enumerate(self.names):
             for b in self.names[i + 1:]:
@@ -164,8 +139,7 @@ class QuantumObservableBank:
         return np.sqrt(max(0.0, var_term + cov_term))
 
     def batch_scores(self, X_labeled, X_pool, use_covariance=True):
-        """Full pipeline: recompute phases from the current labeled pool,
-        encode states for the candidate pool, return U_total per candidate."""
+        """U_total for each candidate in X_pool."""
         phase_weights = feature_phase_weights(X_labeled)
         psi_pool = encode_states(X_pool, phase_weights)
         scores = np.array([
@@ -176,10 +150,8 @@ class QuantumObservableBank:
 
 
 def default_feature_groups(d):
-    """Deterministic 3-way split of feature indices into overlapping-but-
-    distinct structural / electronic / thermodynamic groups (block-
-    concentration with 1-index overlap at each boundary, matching the
-    manuscript's 'overlapping but non-identical support' requirement)."""
+    """3-way split of feature indices into structural/electronic/thermodynamic
+    groups, overlapping by 1 index at each boundary."""
     third = max(1, d // 3)
     struct = list(range(0, third + 1))
     elec = list(range(third, 2 * third + 1))
@@ -188,10 +160,8 @@ def default_feature_groups(d):
 
 
 def self_test():
-    """Verifies (a) non-commutativity of the default observable bank,
-    (b) Proposition 2's classical-limit reduction: with commuting
-    observables, real coefficients, and covariance dropped, U_total^2
-    equals sum_k alpha_k^2 Var_k exactly."""
+    """Checks non-commutativity of the default bank and the classical-limit
+    reduction (Prop. 2) to floating-point precision."""
     rng = np.random.default_rng(0)
     d = 12
     groups = default_feature_groups(d)
