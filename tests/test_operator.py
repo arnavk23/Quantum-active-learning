@@ -25,6 +25,23 @@ def test_softmax_sums_to_one():
     assert np.all(p >= 0)
 
 
+def test_softmax_numerically_stable_on_large_magnitude_inputs():
+    """Guards against regressions in the x - x.max() stabilization: large
+    positive/negative inputs should not produce NaN/inf, should still sum
+    to 1, and should concentrate probability on the largest entries."""
+    x = np.array([
+        [1e3, -1e3, 0.0, 500.0],
+        [-1e3, -1e3, -1e3, -999.0],
+        [1e3, 1e3 - 1, 1e3 - 2, -1e3],
+    ])
+    p = softmax(x, axis=1)
+    assert np.all(np.isfinite(p))
+    assert np.allclose(p.sum(axis=1), 1.0)
+    assert np.all(p >= 0)
+    # Probability mass concentrates on the largest input in each row.
+    assert np.array_equal(np.argmax(p, axis=1), np.argmax(x, axis=1))
+
+
 def test_encode_states_normalized():
     rng = np.random.default_rng(1)
     d = 12
