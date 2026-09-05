@@ -8,6 +8,7 @@ import pytest
 qiskit = pytest.importorskip("qiskit")
 
 from quantum_al.operator import make_observable, default_feature_groups, encode_states
+from quantum_al.operator_sparse import make_sparse_observable
 from quantum_al.circuit import circuit_variance, circuit_covariance
 
 
@@ -49,3 +50,17 @@ def test_circuit_covariance_matches_classical(sample_state):
 
     assert abs(classical_cov - circuit_cov) < 1e-6
     assert n_terms > 0
+
+
+def test_sparse_circuit_variance_matches_classical(sample_state):
+    alpha, _, _ = sample_state
+    groups = default_feature_groups(21)
+    O_sparse = make_sparse_observable(21, groups["structural"], seed=1)
+
+    exp_O = np.real(np.conj(alpha) @ (O_sparse @ alpha))
+    exp_O2 = np.real(np.conj(alpha) @ (O_sparse @ (O_sparse @ alpha)))
+    classical_var = max(0.0, exp_O2 - exp_O ** 2)
+
+    circuit_var, n_terms_O, n_terms_O2 = circuit_variance(alpha, O_sparse, exact=True)
+
+    assert abs(classical_var - circuit_var) < 1e-6

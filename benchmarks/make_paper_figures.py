@@ -196,10 +196,42 @@ def fig5_measurement_grouping():
     print("saved fig5_measurement_grouping.pdf")
 
 
+def fig6_sparse_observables():
+    with open(os.path.join(RESULTS, "sparse_observable_experiment.json")) as f:
+        d = json.load(f)
+    dense = d["pauli_overhead_K3_d21"]["dense"]
+    sparse = d["pauli_overhead_K3_d21"]["sparse"]
+
+    fig, ax = plt.subplots(figsize=(3.6, 2.8))
+    labels = ["Raw", "QWC grouped"]
+    x = np.arange(len(labels))
+    w = 0.35
+    dense_vals = [dense["total_raw"], dense["total_qwc"]]
+    sparse_vals = [sparse["total_raw"], sparse["total_qwc"]]
+    ax.bar(x - w / 2, dense_vals, w, label="Dense", color="#d7191c")
+    ax.bar(x + w / 2, sparse_vals, w, label="Sparse", color="#1a9641")
+    for i, v in enumerate(dense_vals):
+        ax.text(i - w / 2, v + 60, str(v), ha="center", fontsize=7.5)
+    for i, v in enumerate(sparse_vals):
+        ax.text(i + w / 2, v + 60, str(v), ha="center", fontsize=7.5)
+    ax.set_xticks(x)
+    ax.set_xticklabels(labels)
+    ax.set_ylabel("Measurement settings\n(9 quantities, K=3, d=21)")
+    ax.set_title("Dense vs. sparse observables")
+    ax.legend(loc="upper right", frameon=False)
+    ax.set_ylim(0, max(dense_vals) * 1.2)
+    ax.spines[["top", "right"]].set_visible(False)
+    fig.tight_layout()
+    fig.savefig(os.path.join(FIGDIR, "fig6_sparse_observables.pdf"))
+    plt.close(fig)
+    print("saved fig6_sparse_observables.pdf")
+
+
 if __name__ == "__main__":
     fig1_learning_curves()
     fig2_primary_comparison()
     fig3_ablation()
     fig4_shot_convergence()
     fig5_measurement_grouping()
+    fig6_sparse_observables()
     print("\nAll figures saved to", FIGDIR)
