@@ -1,8 +1,8 @@
 # Real-Data Results Summary
 
 Every number below comes from an actual, reproducible script run against real
-Materials Project data (`data/*.json`, via `scripts/fetch_real_materials_data.py`)
-using the real operator formalism in `scripts/quantum_operator.py` (Eq. 1-6 of
+Materials Project data (`data/*.json`, via `quantum_al.fetch_data`)
+using the operator formalism in `quantum_al/operator.py` (Eq. 1-6 of
 the manuscript, self-tested against the classical-limit reduction). This
 replaces the previous manuscript's tables, which did not reproduce from any
 code in the repository.
