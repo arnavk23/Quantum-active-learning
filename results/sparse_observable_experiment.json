@@ -1,0 +1,143 @@
+{
+  "pauli_overhead_K3_d21": {
+    "dense": {
+      "n_qubits": 5,
+      "total_raw": 4752,
+      "total_qwc": 1098,
+      "per_quantity": {
+        "structural_O": {
+          "raw": 528,
+          "qwc": 122
+        },
+        "structural_O2": {
+          "raw": 528,
+          "qwc": 122
+        },
+        "electronic_O": {
+          "raw": 528,
+          "qwc": 122
+        },
+        "electronic_O2": {
+          "raw": 528,
+          "qwc": 122
+        },
+        "thermodynamic_O": {
+          "raw": 528,
+          "qwc": 122
+        },
+        "thermodynamic_O2": {
+          "raw": 528,
+          "qwc": 122
+        },
+        "structural_electronic_sym": {
+          "raw": 528,
+          "qwc": 122
+        },
+        "structural_thermodynamic_sym": {
+          "raw": 528,
+          "qwc": 122
+        },
+        "electronic_thermodynamic_sym": {
+          "raw": 528,
+          "qwc": 122
+        }
+      }
+    },
+    "sparse": {
+      "n_qubits": 5,
+      "total_raw": 1936,
+      "total_qwc": 366,
+      "per_quantity": {
+        "structural_O": {
+          "raw": 144,
+          "qwc": 14
+        },
+        "structural_O2": {
+          "raw": 144,
+          "qwc": 14
+        },
+        "electronic_O": {
+          "raw": 256,
+          "qwc": 40
+        },
+        "electronic_O2": {
+          "raw": 256,
+          "qwc": 40
+        },
+        "thermodynamic_O": {
+          "raw": 240,
+          "qwc": 62
+        },
+        "thermodynamic_O2": {
+          "raw": 240,
+          "qwc": 62
+        },
+        "structural_electronic_sym": {
+          "raw": 272,
+          "qwc": 41
+        },
+        "structural_thermodynamic_sym": {
+          "raw": 0,
+          "qwc": 0
+        },
+        "electronic_thermodynamic_sym": {
+          "raw": 384,
+          "qwc": 93
+        }
+      }
+    }
+  },
+  "accuracy_original_formalism_band_gap": {
+    "sparse_per_trial": [
+      0.4448455030659194,
+      0.541604599441234,
+      0.4885236355951281,
+      0.5369414376912147,
+      0.4339997925261394
+    ],
+    "dense_per_trial": [
+      0.4472056040842831,
+      0.5718393870133206,
+      0.5213747836767684,
+      0.5486382468594717,
+      0.4762484968772316
+    ],
+    "t_statistic": -3.2648647680839127,
+    "p_value": 0.030938529247958063
+  },
+  "accuracy_v3_band_gap": {
+    "sparse_per_trial": [
+      0.5248074468634145,
+      0.5149934605256546,
+      0.5709135009208459,
+      0.5743892045583572,
+      0.5934525157624707
+    ],
+    "dense_per_trial": [
+      0.48444118977748285,
+      0.5799406654587507,
+      0.6885456202020936,
+      0.6191598954231574,
+      0.5754010165989113
+    ],
+    "t_statistic": -1.183214176569113,
+    "p_value": 0.30224219131343316
+  },
+  "v3_tree_group_covariance_exact_zero_check": {
+    "tree_group_0_tree_group_1": 0.0,
+    "tree_group_0_tree_group_2": 0.0,
+    "tree_group_1_tree_group_2": 0.0
+  },
+  "pauli_overhead_v3_ntrees99": {
+    "n_qubits": 7,
+    "dense": {
+      "total_raw": 74304,
+      "total_qwc": 9846
+    },
+    "sparse": {
+      "total_raw": 24960,
+      "total_qwc": 2676
+    },
+    "note": "sparse covariance terms are exactly zero (raw=0) for all 3 tree-group pairs, confirmed independently at this scale"
+  }
+}
