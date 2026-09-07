@@ -11,7 +11,7 @@ tags:
 authors:
   - name: Arnav Kapoor
     orcid: 0009-0007-9818-7908
-    affiliation: 1
+    affiliation: '1'
 affiliations:
   - name: Indian Institute of Science Education and Research Bhopal, India
     index: 1
