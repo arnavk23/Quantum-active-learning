@@ -17,8 +17,8 @@ gaps. Useful bug reports include:
 ## Development setup
 
 ```bash
-git clone https://github.com/arnavk23/Quantum-active-learning.git
-cd Quantum-active-learning
+git clone https://github.com/arnavk23/quantum_al.git
+cd quantum_al
 python -m venv .venv
 source .venv/bin/activate        # or .venv\Scripts\activate on Windows
 pip install -e ".[test,circuit]"

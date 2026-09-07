@@ -34,7 +34,7 @@ circuit = ["qiskit>=1.0.0", "qiskit-aer>=0.14.0"]
 test = ["pytest>=7.0.0"]
 
 [project.urls]
-Repository = "https://github.com/arnavk23/Quantum-active-learning"
+Repository = "https://github.com/arnavk23/quantum_al"
 
 [tool.setuptools.packages.find]
 where = ["src"]

@@ -1,6 +1,6 @@
 # quantum_al: Correlation-Aware Active Learning for Materials Discovery
 
-[![Tests](https://github.com/arnavk23/Quantum-active-learning/actions/workflows/tests.yml/badge.svg)](https://github.com/arnavk23/Quantum-active-learning/actions/workflows/tests.yml)
+[![Tests](https://github.com/arnavk23/quantum_al/actions/workflows/tests.yml/badge.svg)](https://github.com/arnavk23/quantum_al/actions/workflows/tests.yml)
 
 A Python package implementing and honestly benchmarking two attempts at a
 correlation-aware acquisition function for active learning in materials
@@ -64,8 +64,8 @@ above is what the real, rerun experiments show.
 ## Installation
 
 ```bash
-git clone https://github.com/arnavk23/Quantum-active-learning.git
-cd Quantum-active-learning
+git clone https://github.com/arnavk23/quantum_al.git
+cd quantum_al
 python -m venv .venv
 source .venv/bin/activate        # or .venv\Scripts\activate on Windows
 pip install -e ".[test,circuit]"
