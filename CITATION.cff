@@ -13,18 +13,23 @@ keywords:
   - active learning
   - materials discovery
   - quantum-inspired algorithms
+  - information theory
   - uncertainty quantification
   - negative result
 abstract: >-
-  Implementation and evaluation of a covariance-aware quantum-inspired
-  uncertainty formalism for active learning in materials discovery. Includes
-  a rigorous, real-data (Materials Project) benchmark against nine standard
-  active-learning baselines, an ablation study, and an observable-sensitivity
-  sweep. The accompanying paper reports this as a negative result: the
-  formalism does not outperform standard baselines, and diagnoses why.
+  Implementation and evaluation of two correlation-aware acquisition scores
+  for multi-property active learning in materials discovery: a joint
+  expected-information-gain score derived from Bayesian experimental design,
+  with a proved and numerically-verified decomposition theorem, and an
+  earlier covariance-aware quantum-inspired uncertainty formalism. Includes
+  rigorous, real-data (Materials Project) benchmarks, including a four-pair
+  multi-property test and a nine-baseline single-property benchmark, ablation
+  studies, and a real quantum circuit realization. The accompanying paper
+  reports both approaches honestly: neither reliably outperforms directly
+  measuring ensemble disagreement, and it diagnoses why.
 preferred-citation:
   type: article
-  title: "Quantum-inspired covariance does not improve active learning for materials discovery"
+  title: "Correlation-aware information gain does not outperform ensemble disagreement in materials active learning"
   authors:
     - family-names: "Kapoor"
       given-names: "Arnav"

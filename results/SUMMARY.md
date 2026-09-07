@@ -156,6 +156,103 @@ uncertainty the way an ensemble or GP does.
   meant to model real materials). Numbers in `spurious_correlation.json` are
   real outputs of the noise-injection experiment.
 
+## Joint expected-information-gain (JEIG): a mathematically derived
+## alternative to the quantum-covariance ansatz
+
+Source: `src/quantum_al/joint_eig.py`, `benchmarks/run_joint_eig_experiment.py`,
+`results/joint_eig_experiment.json`, `results/joint_eig_experiment_replication.json`.
+
+The original formalism's covariance term was an analogy (borrowed quantum
+operator math), not a derivation, and measured as inert in every ablation
+above. This experiment replaces it with a term derived directly from
+Bayesian experimental design: for K real, jointly-labeled targets and an
+ensemble predictive model, the joint expected information gain is
+
+    JEIG(x) = 1/2 * log det(Sigma_pred(x) + R)
+
+where `Sigma_pred(x)` is the (K,K) covariance of per-tree predictions
+across a random-forest ensemble at candidate x, and `R` is the diagonal
+out-of-bag residual variance per task.
+
+**A real, checked theorem** (`self_test()` in `joint_eig.py`, plus
+`tests/test_joint_eig.py`): summing the per-task marginal EIG terms and
+subtracting the joint term always equals `-1/2 * log det(Corr(x))`, the
+total correlation among the K predictive uncertainties (Hadamard's
+determinant inequality guarantees this gap is >= 0). It is exactly zero
+when the tasks' epistemic uncertainties are uncorrelated, in which case
+JEIG collapses exactly to ordinary per-task ensemble-variance scoring
+(the classical baseline is an exact special case, not an approximation) —
+this is the honest version of the "classical-limit reduction" the original
+Prop. 2 claimed but never actually used for anything.
+
+**Empirical test, real MP data, one AL query returns all K labels (a
+real DFT run gives every computed property at once):**
+
+*Primary pair* — band_gap + formation_energy, n=498 shared materials,
+real label correlation r=-0.365, 5 trials, same N0/T/batch protocol as
+the primary benchmark:
+
+| Method | Final joint R² (mean of both tasks) |
+|---|---|
+| Joint-EIG | 0.7000 ± 0.0492 |
+| Marginal-Sum (classical-limit ablation) | 0.6924 ± 0.0407 |
+| Random | 0.6378 ± 0.0466 |
+
+Joint-EIG beats Random significantly (mean diff +0.0623, p=0.017 raw,
+p=0.034 after Holm-Bonferroni, survives correction). Joint-EIG beats the
+correlation-blind Marginal-Sum ablation only nominally (+0.0076, p=0.27,
+not significant). Mean total-correlation gap on this pair: 0.0118
+(max 0.0493) — confirms the two tasks' epistemic uncertainties are
+genuinely, non-trivially correlated across the ensemble on real data.
+
+**Four independent real property pairs were tested** (all pairs with
+enough shared-material overlap to run a meaningful AL protocol):
+
+| Pair | n | label r | Joint-EIG vs Marginal-Sum | Joint-EIG vs Random | mean gap |
+|---|---|---|---|---|---|
+| band_gap + formation_energy | 498 | -0.365 | +0.0076, p=0.27 (ns) | +0.0623, **p=0.034 (survives correction)** | 0.0118 |
+| formation_energy + magnetic_moment | 220 | 0.205 | +0.0006, p=0.99 (ns) | -0.0164, p=0.66 (ns) | 0.0041 |
+| band_gap + magnetic_moment | 193 | -0.024 | +0.0086, p=0.25 (ns) | +0.0186, p=0.17 (ns, corrected) | 0.0042 |
+| bulk_modulus + dielectric_constant | 49 | 0.334 | -0.0314, p=0.61 (ns) | +0.0388, p=0.61 (ns) | 0.0211 |
+
+(`results/joint_eig_experiment.json`, `_replication.json`,
+`_pair_bg_mm.json`, `_pair_bm_dc.json`. The last pair used a scaled-down
+protocol, n0=15/T=5/batch=3, because n=49 is too small for the default
+N0=50 seed; treat it as low-power/inconclusive, not a fifth vote either
+way.)
+
+**Honest reading:** across 4 real, independently-measured pairs spanning
+weak to strong label correlation, Joint-EIG **never** significantly beats
+the correlation-blind Marginal-Sum ablation — the joint/covariance term
+adds no measurable value over plain per-task ensemble-disagreement
+scoring in any of the 4 tests. It significantly beats random sampling in
+exactly 1 of 4 (the largest-N, most strongly-correlated pair), which is
+attributable to ensemble uncertainty in general (Marginal-Sum wins there
+too, nominally) rather than to the joint term specifically. The
+total-correlation gap is real and non-zero in every pair (confirming the
+theorem is measuring something genuine, not numerical noise), but it
+does not translate into a reliable accuracy advantage, and its magnitude
+does not even track label correlation strength cleanly (the near-zero-
+label-correlation pair, r=-0.024, has a similar gap to the r=0.205 pair).
+
+This is not evidence that covariance-aware acquisition "far supersedes"
+existing active-learning methods — across every formulation tried in
+this repository (the original quantum operator, three narrower fixes,
+and this information-theoretic redesign), no version of "make the
+acquisition score aware of cross-property/cross-observable correlation"
+has produced a reliable, replicated accuracy gain over the simpler
+alternative that ignores correlation. What is different this time: the
+mathematics is a real, checkable derivation (Hadamard's inequality, an
+exact classical-limit reduction), not an analogy, and it correctly
+predicts its own null result: the gap term is provably zero when
+correlation is absent and provably non-negative in general, so a small
+or absent empirical benefit is exactly what the theorem allows, not a
+contradiction of it. This is a stronger theoretical contribution than
+the original manuscript, but it does not change the empirical
+conclusion: on this class of real materials data, in this batch-AL
+setting, correlation-aware acquisition is not distinguishable from
+ensemble uncertainty alone.
+
 ## Known limitations of this rebuild (be upfront about these too)
 
 - Thermal conductivity was dropped (not available at scale in MP) — 5 real

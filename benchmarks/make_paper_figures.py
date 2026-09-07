@@ -227,6 +227,48 @@ def fig6_sparse_observables():
     print("saved fig6_sparse_observables.pdf")
 
 
+def fig7_joint_eig_comparison():
+    files = [
+        ("joint_eig_experiment.json", "band_gap\n+ formation_energy\n(n=498, r=-0.37)"),
+        ("joint_eig_experiment_replication.json", "formation_energy\n+ magnetic_moment\n(n=220, r=0.21)"),
+        ("joint_eig_experiment_pair_bg_mm.json", "band_gap\n+ magnetic_moment\n(n=193, r=-0.02)"),
+        ("joint_eig_experiment_pair_bm_dc.json", "bulk_modulus\n+ dielectric_const.\n(n=49, r=0.33)"),
+    ]
+    jeig, jeig_err, msum, msum_err, rand, rand_err, labels = [], [], [], [], [], [], []
+    for fname, label in files:
+        with open(os.path.join(RESULTS, fname)) as f:
+            d = json.load(f)
+        s = d["summary"]
+        jeig.append(s["Joint-EIG"]["final_joint_r2_mean"])
+        jeig_err.append(s["Joint-EIG"]["final_joint_r2_std"])
+        msum.append(s["Marginal-Sum"]["final_joint_r2_mean"])
+        msum_err.append(s["Marginal-Sum"]["final_joint_r2_std"])
+        rand.append(s["Random"]["final_joint_r2_mean"])
+        rand_err.append(s["Random"]["final_joint_r2_std"])
+        labels.append(label)
+
+    x = np.arange(len(labels))
+    off = 0.15
+    fig, ax = plt.subplots(figsize=(6.0, 3.0))
+    ax.errorbar(x - off, jeig, yerr=jeig_err, fmt="o", color="#7b3294", label="Joint-EIG",
+                capsize=3, markersize=5, linewidth=1.2, elinewidth=1.0)
+    ax.errorbar(x, msum, yerr=msum_err, fmt="s", color="#1f78b4", label="Marginal-Sum (classical limit)",
+                capsize=3, markersize=5, linewidth=1.2, elinewidth=1.0)
+    ax.errorbar(x + off, rand, yerr=rand_err, fmt="^", color="#999999", label="Random",
+                capsize=3, markersize=5, linewidth=1.2, elinewidth=1.0)
+    ax.set_xticks(x)
+    ax.set_xticklabels(labels, fontsize=7)
+    ax.set_xlim(-0.5, len(labels) - 0.5)
+    ax.set_ylabel(r"Final joint test $R^2$ (mean $\pm$ s.d.)")
+    ax.set_title("Joint-EIG vs. classical limit vs. random, four real property pairs")
+    ax.legend(loc="lower left", frameon=False, fontsize=7)
+    ax.spines[["top", "right"]].set_visible(False)
+    fig.tight_layout()
+    fig.savefig(os.path.join(FIGDIR, "fig7_joint_eig_comparison.pdf"))
+    plt.close(fig)
+    print("saved fig7_joint_eig_comparison.pdf")
+
+
 if __name__ == "__main__":
     fig1_learning_curves()
     fig2_primary_comparison()
@@ -234,4 +276,5 @@ if __name__ == "__main__":
     fig4_shot_convergence()
     fig5_measurement_grouping()
     fig6_sparse_observables()
+    fig7_joint_eig_comparison()
     print("\nAll figures saved to", FIGDIR)

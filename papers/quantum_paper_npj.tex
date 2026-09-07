@@ -19,7 +19,7 @@
 \titleformat{\section}{\normalfont\large\bfseries}{\thesection}{1em}{}
 \titleformat{\subsection}{\normalfont\bfseries}{\thesubsection}{1em}{}
 
-\title{\Large Quantum-inspired covariance does not improve active learning for materials discovery}
+\title{\Large Correlation-aware information gain does not outperform ensemble disagreement in materials active learning}
 
 \author[1]{Arnav Kapoor\orcidlink{0009-0007-9818-7908}}
 \affil[1]{Indian Institute of Science Education and Research Bhopal, Bhopal 462066, India}
@@ -32,38 +32,124 @@
 \end{center}
 
 \begin{abstract}
-\noindent Acquisition functions for active learning in materials discovery usually reduce multi-property uncertainty to a single scalar score. This discards cross-property correlations that could carry information about which candidates are worth labeling next. We formalize a quantum-inspired alternative in which each candidate is encoded as a state in a feature Hilbert space, uncertainty is measured through several non-commuting Hermitian observables, and their variances and covariances are combined with complex coupling coefficients into one acquisition score. We prove this score reduces to a standard weighted-variance rule in the classical limit. We implement the formalism exactly, verify it against that limit, and test it against nine active-learning baselines on five real regression tasks from the Materials Project, with five trials, paired significance tests, and an ablation study. As specified, the formalism underperforms on four of five tasks, and the ablation shows its covariance term changes accuracy by an amount indistinguishable from noise. We trace the cause to a simple fact: the score never looks at the downstream model's own residuals. Coupling the state encoding to a random forest's per-tree disagreement fixes this and brings the method to statistical parity with the best baseline on every task, but a further ablation shows the gain comes entirely from the disagreement signal, not from the quantum machinery. We also build a real quantum circuit realization of the formalism, confirm it matches the classical formula exactly, and characterize its cost: hundreds of Pauli measurement terms per quantity, a cost that standard measurement grouping cuts four- to twelve-fold, and that building the observables sparse from the start cuts by a further two- to three-fold, at the price of a small but measurable accuracy drop that traces to the same source: sparse, non-overlapping observables have exactly zero covariance between them. We report all of this, including the parts that do not favor the method, as evidence for a general point: covariance-aware aggregation over non-commuting observables is not, by itself, a substitute for measuring what the predictive model actually finds uncertain.
+\noindent Acquisition functions for active learning in materials discovery usually reduce multi-property uncertainty to a single scalar score, discarding correlations between properties that share the same underlying composition and structure. We derive a joint acquisition score directly from Bayesian experimental design rather than by analogy: for $K$ real, jointly-labeled target properties, the joint expected information gain of a candidate is $\mathrm{JEIG}(x) = \tfrac{1}{2}\log\det(\Sigma_{\mathrm{pred}}(x) + R)$, where $\Sigma_{\mathrm{pred}}(x)$ is a random-forest ensemble's per-tree predictive covariance and $R$ is the per-task residual variance. We prove that summing the per-task marginal information-gain terms and subtracting the joint term always equals the total correlation among the $K$ predictive uncertainties, a quantity that is exactly zero when the tasks are uncorrelated, in which case the joint score reduces exactly, not approximately, to ordinary per-task ensemble-variance scoring. We verify this identity numerically to floating-point precision. We then test the joint score against this classical-limit ablation and against random sampling on four real, independently-measured Materials Project property pairs spanning weak to strong label correlation. The joint score never significantly outperforms the correlation-blind ablation in any of the four pairs, and beats random sampling significantly in only one, the pair with the largest sample size and strongest correlation. The total-correlation term is measurably non-zero in every pair, confirming the theorem captures something real, but this does not translate into a reliable accuracy gain. We report this alongside a full rebuild and rigorous evaluation of an earlier, unrelated attempt at the same goal, a quantum-inspired formalism that represents properties as non-commuting Hermitian operators and couples them through a complex-coefficient covariance term. That formalism underperforms nine standard baselines on four of five real regression tasks, and an ablation shows its covariance term changes accuracy by an amount indistinguishable from noise; a fix that couples the state encoding to ensemble disagreement reaches parity with the best baseline, but a further ablation shows this gain, too, is unrelated to the quantum-inspired machinery. We also built a real quantum circuit realization of that formalism and characterized its measurement cost on near-term hardware. Across two structurally different, independently-derived attempts, one an analogy and one a proof, correlation-aware aggregation over multiple uncertainty sources does not outperform directly measuring what the predictive model itself finds uncertain.
 \end{abstract}
 
 \section{Introduction}
 
 Labeling a new materials candidate is expensive. Density-functional theory calculations and synthesis experiments both take time and compute or lab resources, so choosing which candidates to label next is a central problem in computational materials discovery~\cite{wang2023scientific,ren2018accelerated,pyzerknapp2022accelerating,huang2024machine}. Active learning addresses this by sequentially selecting the most informative unlabeled candidates under a fixed budget~\cite{settles2009active,cohn1996active,settles2012active}. The choice of acquisition function, the rule that scores candidates, is what determines how well this works in practice.
 
-Most acquisition functions used in materials discovery reduce uncertainty to a single number per candidate. Uncertainty sampling, Query-by-Committee, Expected Improvement, and diversity-based methods all follow this pattern~\cite{sener2018active,ash2020deep,kim2021task,lookman2019active,vandermause2020fly,bulusu2022efficient}. Bayesian deep learning approaches improve how that single number is estimated, through Monte Carlo dropout, deep ensembles, or explicit weight uncertainty, but keep the same scalar structure~\cite{gal2016dropout,lakshminarayanan2017simple,blundell2015weight,snoek2012practical}. This is a reasonable simplification when properties are independent. It is a real loss of information when they are not. Band gap, formation energy, and elastic response of a material share the same underlying composition and structure, so they are correlated~\cite{jain2013materials,curtarolo2013highthroughput,noh2019inverse,ong2013python}. A candidate that looks uncertain along one axis may be redundant along a correlated one already covered by the labeled set. A scalar acquisition score cannot see this distinction because it never represents the joint structure in the first place.
+Most acquisition functions used in materials discovery reduce uncertainty to a single number per candidate. Uncertainty sampling, Query-by-Committee, Expected Improvement, and diversity-based methods all follow this pattern~\cite{sener2018active,ash2020deep,kim2021task,lookman2019active,vandermause2020fly,bulusu2022efficient}. Bayesian deep learning approaches improve how that single number is estimated, through Monte Carlo dropout, deep ensembles, or explicit weight uncertainty, but keep the same scalar structure~\cite{gal2016dropout,lakshminarayanan2017simple,blundell2015weight,snoek2012practical}. This is a reasonable simplification when properties are independent. It is a real loss of information when they are not. Band gap, formation energy, and elastic response of a material share the same underlying composition and structure, so they are correlated~\cite{jain2013materials,curtarolo2013highthroughput,noh2019inverse,ong2013python}. A candidate that looks uncertain along one axis may be redundant along a correlated one already covered by the labeled set, and when a single experiment or DFT run returns several property labels at once, a joint acquisition score that sees this redundancy is a well-posed, testable idea, not merely an aesthetic one.
 
-One way to represent that joint structure explicitly is to borrow the mathematical language of quantum mechanics: states, non-commuting operators, and covariance between operators. This idea sits within a broader line of quantum-inspired machine learning that uses amplitude encoding, operator-based measurement, and kernel methods built on quantum feature maps, all runnable on classical hardware~\cite{biamonte2017quantum,schuld2021machine,li2021quantuminspired,rebentrost2014quantum,schuld2021supervised,havlicek2019supervised}. Materials representation learning, through graph neural networks and related architectures, supplies the feature vectors that any such encoding would consume~\cite{xie2018crystal,schutt2018schnet,chen2019graph,xie2023crystal,cova2019deep}.
+We tried to build such a score twice, in two structurally unrelated ways, and report both attempts here in full.
 
-We build exactly this: a covariance-aware, quantum-inspired acquisition function, and we test it as rigorously as we can. Every number in this paper comes from running actual code on real data, not from illustration. The result is not what a reader might expect from the framing above. As specified, the formalism loses to nine standard baselines on four of five real materials-property tasks. We diagnose why, fix the underlying problem directly, and show that the fix works, but that it works for a reason that has nothing to do with the quantum-inspired part of the construction. We also build a genuine quantum circuit realization of the formalism and characterize what it would cost to run on near-term hardware.
+The first attempt, described in Section~\ref{sec:quantum}, borrows the mathematical language of quantum mechanics: states, non-commuting operators, and covariance between operators. This sits within a broader line of quantum-inspired machine learning that uses amplitude encoding, operator-based measurement, and kernel methods built on quantum feature maps, all runnable on classical hardware~\cite{biamonte2017quantum,schuld2021machine,li2021quantuminspired,rebentrost2014quantum,schuld2021supervised,havlicek2019supervised}. We built it, implemented it exactly, proved its classical-limit reduction, and tested it as rigorously as we could against nine baselines on five real Materials Project tasks. It underperforms on four of five tasks, and an ablation shows its covariance term is inert. We diagnosed why, found a fix, and showed the fix works for a reason unrelated to the quantum-inspired part of the construction.
 
-Four contributions follow. First, a complete, unit-tested implementation of the covariance-aware formalism, including a proof and a numerical check that it reduces to standard weighted-variance aggregation in the classical limit. Second, a rigorous evaluation against nine baselines on five real Materials Project tasks, with paired significance tests and an ablation study that isolates every mechanism the formalism claims to need. Third, a diagnosis of why the formalism underperforms and a fix, coupling the state encoding to ensemble disagreement, that reaches parity with the best classical baseline on every task, together with a second ablation showing the fix works for reasons unrelated to the quantum-inspired machinery. Fourth, an actual quantum circuit realization of the formalism, verified against the classical closed form, with a resource characterization covering measurement overhead, shot-count convergence, gate-noise sensitivity, and the effect of measurement grouping.
+That result left an open question: is there \emph{any} mathematically principled way for correlation-awareness to help here, or is the whole idea unsound regardless of formalism? The quantum-operator construction was an analogy, assembled from borrowed notation, not derived from an objective. So our second attempt, which we present as the paper's main result in Section~\ref{sec:jeig}, starts over from a real derivation. Bayesian experimental design gives a principled multi-output acquisition score, the joint expected information gain, whose relationship to ordinary per-task uncertainty sampling is a provable identity rather than an assumption~\cite{mackay1992information,houlsby2011bayesian,cover2006elements,watanabe1960information}. We derive it, prove the identity, verify it numerically, and test it on four real, independently-measured Materials Project property pairs spanning weak to strong correlation.
+
+Five contributions follow. First, a joint acquisition score derived from Bayesian experimental design rather than analogy, with a proved and numerically-verified decomposition theorem showing it reduces exactly to ordinary ensemble-variance scoring when properties are uncorrelated. Second, a real multi-property active-learning benchmark on four independent, genuinely correlated Materials Project property pairs, testing this score against its own classical-limit ablation and against random sampling. Third, an honest empirical finding: the joint score does not significantly outperform the classical-limit ablation in any of the four pairs tested, despite the underlying total-correlation term being measurably non-zero in every one. Fourth, a complete, independently-conducted rebuild and evaluation of the earlier quantum-inspired covariance formalism, including its own diagnosis, fix, and a real quantum circuit realization with a near-term hardware cost characterization. Fifth, all code, tests, and real data pipelines needed to reproduce every number in this paper.
 
 \section{Results}
 
-\subsection{Primary comparison}
+\subsection{A provably grounded joint acquisition score}\label{sec:jeig}
 
-Figure~\ref{fig:primary} and Table~\ref{tab:primary} report final test $R^2$ after eight active-learning iterations, averaged over five trials, for all five real regression tasks (band gap, formation energy, bulk modulus, magnetic moment, dielectric constant). The quantum-inspired method is last of ten methods on band gap, sixth on formation energy, eighth on bulk modulus, and last on magnetic moment, where it is the only method with negative $R^2$. It is nominally best on dielectric constant, but every method scores near zero there, so this is not a real advantage; it reflects a target that is hard to predict from the available features for any method.
+Consider $K$ real target properties measured jointly for each material, so that one query returns all $K$ labels at once, exactly what a single DFT calculation or synthesis-and-characterization run typically does. Let a predictive ensemble of $M$ models (here, the $M$ trees of a random forest trained on the current labeled set) each output a $K$-vector prediction $f_m(x)$ for candidate $x$. Their empirical covariance across the ensemble, $\Sigma_{\mathrm{pred}}(x)$, approximates the model's epistemic uncertainty about the joint prediction, and $R=\mathrm{diag}(r_1,\ldots,r_K)$, the out-of-bag residual variance per task, approximates the aleatoric noise floor.
+
+\begin{definition}[Joint expected information gain]\label{def:jeig}
+\begin{equation}
+\mathrm{JEIG}(x) = \tfrac{1}{2}\log\det\bigl(\Sigma_{\mathrm{pred}}(x) + R\bigr). \label{eq:jeig}
+\end{equation}
+\end{definition}
+This is the standard ensemble-disagreement estimate of expected information gain (the multivariate generalization of BALD~\cite{houlsby2011bayesian}) under a Gaussian approximation to the predictive distribution~\cite{mackay1992information}. Define the marginal, per-task term $\mathrm{EIG}_k(x) = \tfrac{1}{2}\log\bigl(\Sigma_{\mathrm{pred}}(x)_{kk} + r_k\bigr)$: this is exactly the score an ordinary per-property ensemble-variance acquisition rule would use, summed across the $K$ tasks while ignoring any correlation between them. We call ranking by $\sum_k \mathrm{EIG}_k(x)$ the Marginal-Sum rule; it is the classical-limit ablation of Equation~\ref{eq:jeig}.
+
+\begin{proposition}[Total-correlation decomposition]\label{prop:jeig}
+\begin{equation}
+\sum_{k=1}^K \mathrm{EIG}_k(x) - \mathrm{JEIG}(x) = -\tfrac{1}{2}\log\det\bigl(\mathrm{Corr}(x)\bigr) \;\ge\; 0, \label{eq:gap}
+\end{equation}
+where $\mathrm{Corr}(x)$ is $\Sigma_{\mathrm{pred}}(x)+R$ rescaled to unit diagonal. The right-hand side is the total correlation (multi-information) of the $K$ predictive uncertainties~\cite{watanabe1960information}. It is exactly zero if and only if $\Sigma_{\mathrm{pred}}(x)+R$ is diagonal, i.e. the ensemble's per-task epistemic uncertainties are uncorrelated, in which case $\mathrm{JEIG}(x)$ collapses exactly, not approximately, to the Marginal-Sum rule.
+\end{proposition}
+
+The proof follows from Hadamard's determinant inequality: for a positive-definite matrix with unit diagonal, its determinant is at most 1, with equality if and only if the matrix is diagonal~\cite{cover2006elements}. Factoring the diagonal scaling out of $\log\det(\Sigma_{\mathrm{pred}}+R)$ gives Equation~\ref{eq:gap} directly. Unlike Proposition~\ref{prop:classical} in Section~\ref{sec:quantum}, which states a reduction under conditions the original formalism never actually satisfies in the experiments that use it, Proposition~\ref{prop:jeig} is the operative relationship between the method tested here and its own null hypothesis: it says exactly when and by how much the joint score can differ from the classical one. We verify it numerically to a tolerance of $10^{-8}$ across randomized covariance matrices of dimension up to $K=4$ (\texttt{tests/test\_joint\_eig.py}), and confirm the gap is exactly zero, not merely small, for diagonal $\Sigma_{\mathrm{pred}}$.
+
+\subsection{Real multi-property test}
+
+We tested Equation~\ref{eq:jeig} against the Marginal-Sum ablation and against random sampling on four real Materials Project property pairs, chosen as every pair with enough shared-material overlap to run a meaningful batch active-learning protocol, at a real, measured label correlation ranging from near zero to moderately strong. Table~\ref{tab:pairs} lists the pairs. Each query returns both properties' labels for the queried material, so the joint metric is the mean test $R^2$ across both tasks after 8 active-learning iterations, averaged over 5 trials with paired significance testing (Holm-Bonferroni correction across the two comparisons per pair: Joint-EIG vs. Marginal-Sum, Joint-EIG vs. Random).
+
+\begin{table}[htbp]
+\centering
+\small
+\caption{The four real property pairs tested, by shared-material sample size and real label correlation.}
+\label{tab:pairs}
+\begin{tabular}{lcc}
+\toprule
+Property pair & $n$ (shared materials) & Label correlation $r$ \\
+\midrule
+Band gap + formation energy & 498 & $-0.365$ \\
+Formation energy + magnetic moment & 220 & $0.205$ \\
+Band gap + magnetic moment & 193 & $-0.024$ \\
+Bulk modulus + dielectric constant & 49 & $0.334$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Figure~\ref{fig:jeig} and Table~\ref{tab:jeig} report the outcome. On the largest and most strongly correlated pair, band gap and formation energy, Joint-EIG beats random sampling significantly (mean difference $+0.062$, $p=0.017$ raw, $p=0.034$ after correction, surviving at $\alpha=0.05$), but its advantage over the correlation-blind Marginal-Sum ablation is small and not significant ($+0.008$, $p=0.27$). On the remaining three pairs, weaker label correlation, smaller sample size, or both, no comparison reaches significance in either direction. The bulk modulus/dielectric constant pair, with only 49 shared materials, is underpowered (both $R^2$ estimates are noisy, including negative values in some trials) and is best read as inconclusive rather than as a vote either way.
+
+\begin{table}[htbp]
+\centering
+\small
+\caption{Final joint test $R^2$ (mean of both tasks, 5 trials) and paired comparisons vs. Joint-EIG. Holm-Bonferroni correction applied across the two comparisons per pair.}
+\label{tab:jeig}
+\begin{tabular}{lcccc}
+\toprule
+Pair & Joint-EIG & Marginal-Sum ($p$) & Random ($p$) & Mean gap (Eq.~\ref{eq:gap}) \\
+\midrule
+Band gap + formation energy & $0.700\pm0.049$ & $0.692$ ($p{=}0.27$) & $0.638$ ($\mathbf{p{=}0.034}$) & $0.0118$ \\
+Formation energy + magnetic moment & $0.497\pm0.140$ & $0.496$ ($p{=}1.00$) & $0.513$ ($p{=}1.00$) & $0.0041$ \\
+Band gap + magnetic moment & $0.382\pm0.125$ & $0.374$ ($p{=}0.25$) & $0.364$ ($p{=}0.17$) & $0.0042$ \\
+Bulk modulus + dielectric constant & $-0.160\pm0.667$ & $-0.129$ ($p{=}0.61$) & $-0.199$ ($p{=}0.61$) & $0.0211$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=0.85\textwidth]{../figures/fig7_joint_eig_comparison.pdf}
+\caption{Final joint test $R^2$ (mean $\pm$ s.d., 5 trials) for Joint-EIG, its classical-limit ablation (Marginal-Sum), and random sampling, across four real, independently-measured Materials Project property pairs.}
+\label{fig:jeig}
+\end{figure}
+
+The total-correlation gap of Equation~\ref{eq:gap} is non-zero in every pair, including the near-zero-label-correlation pair (band gap and magnetic moment, $r=-0.024$, mean gap $0.0042$), confirming the term measures something real: the ensemble's epistemic uncertainty about two tasks can be correlated even when the tasks' raw labels barely are, since epistemic uncertainty depends on where in feature space the training data is sparse, not only on the labels themselves. But the gap's magnitude does not track label correlation strength cleanly across pairs, and in no pair does it translate into a significant accuracy advantage over ignoring it.
+
+\subsection{An earlier, ad hoc formulation: quantum-inspired covariance}\label{sec:quantum}
+
+Before deriving the score above, we built and tested a structurally different attempt at the same goal, representing candidates as states in a Hilbert space and properties as non-commuting Hermitian observables. We report it here in full because it failed for reasons distinct from, and independently informative alongside, Section~\ref{sec:jeig}'s result.
+
+\begin{definition}[Quantum state of a material]\label{def:state}
+The quantum state of candidate $M_i$, with standardized feature vector $x_i\in\mathbb{R}^d$, is
+\begin{equation}
+|\psi_i\rangle = \sum_{j=1}^{d} \alpha_{ij} |f_j\rangle, \qquad \alpha_{ij}=\sqrt{p_{ij}}\,e^{i\phi_{ij}},\ \ \sum_j|\alpha_{ij}|^2=1. \label{eq:state}
+\end{equation}
+\end{definition}
+$K=3$ Hermitian observables $\hat O_k$ (structural, electronic, thermodynamic) are built from overlapping feature subsets, non-commuting by construction. Variance $\mathrm{Var}(\hat O_k;\psi_i)$ and symmetrized covariance $\mathrm{Cov}(\hat O_k,\hat O_l;\psi_i)$ are combined with complex coefficients $\alpha_k$ into a total score $U_{\mathrm{total}}$ (full definitions in Methods, Section~\ref{sec:methods-quantum}).
+
+\begin{proposition}[Classical reduction]\label{prop:classical}
+If all observables commute, all coefficients are real, and covariance terms are dropped, $U_{\mathrm{total}}^2 \to \sum_k \alpha_k^2\,\mathrm{Var}(\hat O_k;\psi_i)$, a standard weighted-variance aggregator.
+\end{proposition}
+We verified this reduction numerically to better than $10^{-9}$. It is a correct statement about the formula, but, unlike Proposition~\ref{prop:jeig}, it describes conditions (commuting observables, real coefficients) that the formalism as actually used never satisfies, so it does not predict anything about the method's real behavior.
+
+\paragraph{Primary comparison.} Figure~\ref{fig:primary} and Table~\ref{tab:primary} report final test $R^2$ after eight active-learning iterations, five trials, on all five real regression tasks (band gap, formation energy, bulk modulus, magnetic moment, dielectric constant), against nine standard baselines. The method is last of ten on band gap, sixth on formation energy, eighth on bulk modulus, and last on magnetic moment, the only method with negative $R^2$ there. It is nominally best on dielectric constant, but every method scores near zero on that task, so this is not a real advantage.
 
 \begin{figure}[htbp]
 \centering
 \includegraphics[width=0.85\textwidth]{../figures/fig2_primary_comparison.pdf}
-\caption{Final test $R^2$ (mean $\pm$ s.d., 5 trials) for the original quantum-inspired method, the best classical baseline for each task, and the residual-coupled variant (Quantum-TreeEnsemble, Section~\ref{sec:v3}), across all five real Materials Project tasks.}
+\caption{Final test $R^2$ (mean $\pm$ s.d., 5 trials) for the original quantum-inspired method, the best classical baseline for each task, and the residual-coupled variant (Quantum-TreeEnsemble), across all five real Materials Project tasks.}
 \label{fig:primary}
 \end{figure}
 
 \begin{table}[htbp]
 \centering
 \small
-\caption{Final test $R^2$ on band gap (mean $\pm$ s.d., 5 trials, 8 iterations), the task used for statistical testing and the ablation study below. The full five-task table is in \texttt{results/primary\_benchmark\_summary.json}.}
+\caption{Final test $R^2$ on band gap (mean $\pm$ s.d., 5 trials, 8 iterations).}
 \label{tab:primary}
 \begin{tabular}{lc}
 \toprule
@@ -82,40 +168,9 @@ Expected Improvement & $0.551 \pm 0.105$ \\
 \end{tabular}
 \end{table}
 
-Figure~\ref{fig:learning} shows the full learning curves for band gap. The quantum-inspired method tracks the baselines early, then falls behind as more samples are labeled, ending below every classical method except by construction it never catches up within the eight-iteration budget tested here.
+Paired two-sided $t$-tests on band gap favor every baseline; after Holm-Bonferroni correction across nine comparisons, none reach significance at $\alpha=0.05$, so the honest summary is a consistent, non-significant disadvantage, not a proven loss (full numbers in \texttt{results/statistical\_tests.json}).
 
-\begin{figure}[htbp]
-\centering
-\includegraphics[width=0.62\textwidth]{../figures/fig1_learning_curves.pdf}
-\caption{Test $R^2$ versus labeled sample count for band gap, mean over 5 trials, shaded band shows one standard deviation. The quantum-inspired method (solid purple) falls behind uncertainty sampling and Query-by-Committee as labeling proceeds.}
-\label{fig:learning}
-\end{figure}
-
-\subsection{Statistical testing}
-
-Table~\ref{tab:stats} reports paired two-sided $t$-tests on band gap, comparing the quantum-inspired method to each baseline across the five trials. Every comparison favors the baseline. Several raw $p$-values are below 0.05, but after Holm-Bonferroni correction across the nine comparisons, none remain significant at $\alpha=0.05$. We therefore cannot claim a statistically confident loss either; the honest summary is a consistent, non-significant disadvantage. Shapiro-Wilk tests confirm the paired differences are approximately normal in every case ($p>0.05$), so the paired $t$-test is the appropriate tool here.
-
-\begin{table}[htbp]
-\centering
-\small
-\caption{Paired $t$-test results, quantum-inspired method versus baseline, on band gap ($n=5$ trials). A positive mean difference would favor the quantum-inspired method; none are positive.}
-\label{tab:stats}
-\begin{tabular}{lccc}
-\toprule
-Comparison (vs. quantum-inspired) & $t$ & $p$ (raw) & $p$ (Holm-Bonferroni) \\
-\midrule
-Uncertainty Sampling & $-4.53$ & 0.011 & 0.073 \\
-Query by Committee & $-4.55$ & 0.010 & 0.073 \\
-Maximum Entropy & $-4.95$ & 0.008 & 0.070 \\
-Expected Improvement & $-1.01$ & 0.371 & 0.410 \\
-Diversity Sampling & $-1.51$ & 0.205 & 0.410 \\
-\bottomrule
-\end{tabular}
-\end{table}
-
-\subsection{Ablation study}
-
-Table~\ref{tab:ablation} and Figure~\ref{fig:ablation}a isolate each mechanism the formalism is built around. None of them matter. Removing the covariance term changes $R^2$ by $+0.0007$, essentially nothing. Forcing the observables to commute changes it by $+0.0062$. Restricting the coupling coefficients to be real changes it by $-0.0081$. Collapsing to a single observable changes it by $-0.0107$. All four deltas sit well inside one trial-to-trial standard deviation, which is roughly 0.05 to 0.08. A previous, unpublished version of this work claimed covariance coupling was the primary driver of performance, with a $2.8\%$ $R^2$ drop from its removal. On real data, the measured effect is two orders of magnitude smaller and not distinguishable from noise.
+\paragraph{Ablation.} Table~\ref{tab:ablation} and Figure~\ref{fig:ablation}a isolate each mechanism. Removing the covariance term changes $R^2$ by $+0.0007$. Forcing commuting observables changes it by $+0.0062$. Restricting coefficients to real values changes it by $-0.0081$. Collapsing to one observable changes it by $-0.0107$. All four sit well inside one trial-to-trial standard deviation ($\approx 0.05$ to $0.08$).
 
 \begin{table}[htbp]
 \centering
@@ -135,42 +190,12 @@ Single observable ($K=1$) & $0.5023 \pm 0.0652$ & $-0.0107$ \\
 \end{tabular}
 \end{table}
 
-Sweeping the number of observables on band gap gives $R^2=0.476\pm0.068$ at $K=2$, $0.513\pm0.046$ at $K=3$, and $0.512\pm0.069$ at $K=6$. $K=3$ is marginally best of the three, in the direction the original design intended, but the method trails every baseline regardless of $K$.
-
-Table~\ref{tab:runtime} reports measured, not simulated, wall-clock time and memory for the acquisition step itself, on the real band-gap candidate pool ($N=650$, single CPU thread, 3 repeats). The quantum-inspired method is fast and light in absolute terms, faster than Query-by-Committee and Maximum Entropy, but this is not a meaningful advantage given it does not win on accuracy.
+\paragraph{Diagnosis and fix.} Two narrow, pre-specified fixes, domain-informed observable groups and importance-weighted state encoding, did not close the gap to the best baseline (details in Methods). Both point to the same structural problem: the score depends only on a candidate's position in feature space and the labeled pool's correlation structure, never on the trained predictor's residuals or disagreement, which every winning baseline measures directly. Encoding the state from a random forest's per-tree predictions instead of raw features (Quantum-TreeEnsemble; full construction in Methods, Section~\ref{sec:methods-v3}) fixes this: Table~\ref{tab:v3} shows it reaches statistical parity with the best baseline on all five tasks ($p>0.15$ throughout).
 
 \begin{table}[htbp]
 \centering
 \small
-\caption{Measured acquisition time and memory at real $N=650$ (mean $\pm$ s.d., 3 runs, single CPU thread).}
-\label{tab:runtime}
-\begin{tabular}{lcc}
-\toprule
-Method & Time (s) & Memory (MB) \\
-\midrule
-Uncertainty Sampling & $0.081\pm0.004$ & $0.79\pm0.01$ \\
-Expected Improvement & $0.083\pm0.001$ & $1.28\pm0.00$ \\
-Quantum-inspired (ours) & $0.369\pm0.002$ & $0.67\pm0.00$ \\
-Maximum Entropy & $0.880\pm0.040$ & $1.17\pm0.00$ \\
-Query by Committee & $1.539\pm0.019$ & $0.96\pm0.07$ \\
-\bottomrule
-\end{tabular}
-\end{table}
-
-\subsection{Diagnosing the failure, and a fix}\label{sec:v3}
-
-We tested two narrow, pre-specified fixes before concluding anything structural was wrong. First, we replaced the arbitrary contiguous feature groups used to build the three observables with groups chosen by physical meaning, electronegativity and periodic-table group to the electronic observable, atomic radius and density to the structural one. This gave $R^2=0.492\pm0.090$ on band gap, worse than the arbitrary grouping. Second, on top of that grouping, we rescaled each feature by the square root of its importance in a random forest fit on the current labeled set, information every winning baseline already uses. This gave $R^2=0.512\pm0.077$, statistically indistinguishable from the unmodified original. Neither closes the gap to the best baseline ($R^2=0.597$).
-
-Both failures point to the same structural problem. The acquisition score depends only on a candidate's position in a fixed, standardized feature space and on the labeled pool's correlation structure. It never depends on the trained predictor's residuals or disagreement, which is exactly what every winning baseline measures.
-
-We therefore built a third, more direct fix: encode the state from the downstream random forest's per-tree predictions instead of the raw material features. Concretely, we fit the same random forest used for evaluation on the current labeled set, collect each candidate's vector of per-tree predictions, standardize it across the candidate pool, and encode that vector as the quantum state. Trees replace features as the basis, split into three equal-size groups, with the same variance, covariance, and complex-coupling machinery applied unmodified on top.
-
-Table~\ref{tab:v3} and Figure~\ref{fig:primary} report this variant, which we call Quantum-TreeEnsemble, against each task's best classical baseline. It reaches statistical parity on all five real tasks: no paired comparison approaches significance ($p>0.15$ throughout), a qualitative change from the original formalism, which lost significantly on band gap.
-
-\begin{table}[htbp]
-\centering
-\small
-\caption{Residual-coupled variant (Quantum-TreeEnsemble) versus each task's best classical baseline, mean $R^2\pm$s.d., 5 trials, paired $t$-test.}
+\caption{Residual-coupled variant (Quantum-TreeEnsemble) vs. each task's best classical baseline, mean $R^2\pm$s.d., 5 trials, paired $t$-test.}
 \label{tab:v3}
 \begin{tabular}{lccc}
 \toprule
@@ -185,7 +210,7 @@ Dielectric constant & $-0.450\pm0.724$ & BADGE: $-0.020$ & 0.322 \\
 \end{tabular}
 \end{table}
 
-This result looks, on its own, like the positive result one might have hoped for. It is not evidence for the covariance-aware quantum formalism specifically. We ran the same ablation as Table~\ref{tab:ablation} on this new variant across all five tasks (Table~\ref{tab:v3ablation}, Figure~\ref{fig:ablation}b). Dropping the covariance term, or collapsing to a single observable, a bare quadratic form over per-tree predictions structurally close to the RF-Uncertainty baseline, performs as well or better than the full construction on four of five tasks. On the fifth and noisiest task, dielectric constant, the full covariance-aware variant is not just worse but unstable ($R^2=-0.450\pm0.724$, individual trials as low as $-1.86$), while its own single-observable ablation stays close to the best baseline ($R^2=-0.160$). Adding multiple non-commuting observables and complex coefficients on top of a genuinely informative signal did not preserve that signal's value. On the hardest task it actively degraded it.
+But a second ablation (Table~\ref{tab:v3ablation}, Figure~\ref{fig:ablation}b) shows this parity has nothing to do with the quantum-inspired apparatus: dropping the covariance term, or collapsing to a single observable, matches or beats the full construction on four of five tasks, and is far more stable on the fifth (dielectric constant: full $R^2=-0.450\pm0.724$, individual trials as low as $-1.86$, vs. single-observable $-0.160$).
 
 \begin{table}[htbp]
 \centering
@@ -208,41 +233,25 @@ Dielectric constant & $-0.450$ & \textbf{$-0.022$} & $-0.160$ \\
 \begin{figure}[htbp]
 \centering
 \includegraphics[width=\textwidth]{../figures/fig3_ablation.pdf}
-\caption{(a) Ablation of the original formalism on band gap. Dropping covariance, forcing commuting observables, restricting coefficients to be real, or collapsing to one observable all leave $R^2$ within one standard deviation of the full model. (b) Ablation of the residual-coupled variant across all five tasks. The single-observable version matches or beats the full covariance-aware version on four of five tasks and is far more stable on the fifth.}
+\caption{(a) Ablation of the original formalism on band gap. (b) Ablation of the residual-coupled variant across all five tasks; the single-observable version matches or beats the full covariance-aware version on four of five tasks.}
 \label{fig:ablation}
 \end{figure}
 
-The pattern is consistent across every experiment we ran. Whatever value the fixed variant has comes from exposing the acquisition score to ensemble disagreement at all, not from the specific way the formalism aggregates it. We did not search further after this. Three independent, pre-specified architectural interventions is already enough attempts that continuing to search for a configuration that wins outright would risk fitting noise in a five-task, five-trial evaluation rather than finding a genuine effect.
-
-\subsection{Secondary experiments}
-
-We reran three further experiments from earlier development of this codebase and report their status honestly. On a synthetic six-class crystal-system task, final accuracy after eight iterations was 89.3\% for quantum-margin sampling, 89.7\% for entropy sampling, and 79.3\% for random sampling. Quantum-margin is essentially tied with entropy sampling and both clearly beat random, a far more modest finding than an earlier claim of 91\% versus 85\%, and one that does not show the quantum method beating entropy sampling. A transfer-learning experiment (oxide to sulfide and nitride families) produced byte-identical $R^2$ trajectories for the transfer and train-from-scratch conditions, indicating an implementation bug rather than a genuine finding; we flag this rather than report it as a result. A multi-property optimization experiment produced $R^2$ values near zero across all properties and iterations, indicating the active-learning loop is not learning effectively in its current synthetic setup; we mark this inconclusive. A spurious-correlation analysis, a deliberately synthetic noise-injection study of a failure mode rather than an attempt to model real materials, ran successfully and its output is available for reference but is not load-bearing for our central claims.
-
-\subsection{Quantum circuit realization}\label{sec:hardware}
-
-Everything above is quantum-inspired: the state and observables are numerical vectors and matrices manipulated by ordinary linear algebra. No circuit, qubit, or measurement appears anywhere in the results so far. We built and characterized what an actual quantum circuit realization of the same formalism looks like, using Qiskit and Qiskit Aer (full construction in Methods).
-
-In the noiseless, exact-statevector limit, the circuit-measured variance and covariance match the classical closed-form values to floating-point precision, better than $10^{-9}$. This confirms the circuit and the classical formalism compute the same object, not merely an analogous one. Decomposing a single three-observable bank's variance and covariance terms into Pauli strings, on the five-qubit padded representation, required 528 distinct Pauli terms for every one of the nine quantities needed per candidate per iteration. Naively, a single candidate's full acquisition score would need on the order of 4,750 measurement settings, and this overhead grows combinatorially with the number of observables: the six-observable configuration from the sensitivity sweep above would need roughly 11,000 settings, for a configuration that already gives no accuracy benefit over three observables.
-
-Standard measurement grouping substantially reduces this. Qubit-wise-commuting grouping, which needs only single-qubit basis rotations and no extra entangling gates, cuts the per-quantity term count from 528 to 122, a 4.3-fold reduction (4,752 to 1,098 settings per candidate). Grouping by full Pauli commutativity reduces this further to 43 groups per quantity, a 12.3-fold reduction, at the cost of extra Clifford basis-change circuits per group, so the qubit-wise number is the more realistic near-term estimate. Figure~\ref{fig:grouping} summarizes this.
+\paragraph{Quantum circuit realization.} We built the formalism as an actual Qiskit circuit (Methods, Section~\ref{sec:methods-circuit}). In the exact-statevector limit, circuit-measured variance and covariance match the classical closed form to better than $10^{-9}$. Decomposing one three-observable bank into Pauli strings needs 528 terms per quantity on the 5-qubit padded representation, roughly 4,750 measurement settings per candidate for a full acquisition score; qubit-wise-commuting grouping cuts this 4.3-fold (Figure~\ref{fig:grouping}), and building the observables sparse from the start cuts it a further 2 to 3-fold, at the cost of a small, statistically significant accuracy drop on the original formalism ($R^2=0.489\pm0.045$ vs. $0.513\pm0.046$, $p=0.031$) traced to a structural fact: non-overlapping sparse observables have exactly zero covariance, so sparsity removes real cross-observable information along with measurement overhead. On the residual-coupled variant, where observable blocks are non-overlapping tree groups by construction, every pairwise covariance is exactly zero to machine precision, and the corresponding accuracy difference is smaller and not significant ($p=0.302$). Ranking fidelity under finite shots recovers fully by $10^5$ shots (Kendall $\tau=0.92$, full top-15 batch overlap; Figure~\ref{fig:shots}), and a realistic depolarizing noise model degrades this to a level comparable to losing an order of magnitude of shots.
 
 \begin{figure}[htbp]
 \centering
 \includegraphics[width=0.55\textwidth]{../figures/fig5_measurement_grouping.pdf}
-\caption{Total measurement settings needed for all nine variance and covariance quantities in the $K=3$ observable bank, before and after measurement grouping.}
+\caption{Total measurement settings for all nine variance and covariance quantities in the $K=3$ observable bank, before and after measurement grouping.}
 \label{fig:grouping}
 \end{figure}
-
-What matters operationally is not the raw expectation-value error but whether the resulting ranking, which candidates get selected, survives finite measurement statistics. Figure~\ref{fig:shots} reports, for 30 real band-gap candidates, Kendall's $\tau$ rank correlation and the fraction of the exact top-15 batch recovered, as a function of shot budget. The ranking degrades gracefully at low shot counts and recovers fully by 100,000 shots (Kendall $\tau=0.92$, 100\% top-15 overlap), confirming the construction is well-posed under realistic finite sampling, but full batch fidelity needs a substantial per-iteration measurement budget. Adding a standard depolarizing noise model, one-qubit gate error $0.1\%$ and two-qubit error $1\%$, representative of good current superconducting hardware, degrades top-15 overlap from 87\% to 73\% and Kendall's $\tau$ from 0.77 to 0.63 at 10,000 shots, comparable to losing an order of magnitude of shots.
 
 \begin{figure}[htbp]
 \centering
 \includegraphics[width=0.62\textwidth]{../figures/fig4_shot_convergence.pdf}
-\caption{Acquisition-ranking fidelity versus shot budget for 30 real band-gap candidates, noiseless simulation. Kendall's $\tau$ and the fraction of the exact top-15 batch recovered both converge to the noiseless exact result by $10^5$ shots.}
+\caption{Acquisition-ranking fidelity versus shot budget for 30 real band-gap candidates, noiseless simulation.}
 \label{fig:shots}
 \end{figure}
-
-Measurement grouping treats the observables as given and reduces the cost of measuring them. We also tested the complementary approach: building the observables sparse from the start, nonzero only within their own feature block, rather than dense matrices grouped after the fact. On the $K=3$ raw-feature construction (5 qubits), this cuts the raw Pauli-term count a further 2.4-fold (4,752 to 1,936 for the nine quantities) and the qubit-wise-commuting count a further 3-fold (1,098 to 366; Figure~\ref{fig:sparse}). At the larger, practically relevant scale used by the residual-coupled fix (99 trees, 7 qubits), the reduction is similar: 74,304 to 24,960 raw terms, 9,846 to 2,676 after qubit-wise grouping, a 3.7-fold reduction on top of grouping.
 
 \begin{figure}[htbp]
 \centering
@@ -251,95 +260,61 @@ Measurement grouping treats the observables as given and reduces the cost of mea
 \label{fig:sparse}
 \end{figure}
 
-Sparsity also has a real, if small, cost. On the original formalism, sparse observables give $R^2=0.489\pm0.045$ on band gap versus $0.513\pm0.046$ for dense observables, a small but statistically significant drop (paired $t=-3.27$, $p=0.031$, 5 trials). The reason is structural: two observables with non-overlapping feature blocks have an exactly zero symmetrized covariance under this construction, not just a small one, so sparsity removes real cross-observable information along with the measurement overhead. On the residual-coupled fix (Section~\ref{sec:v3}), where the observable blocks are non-overlapping tree groups by construction, this effect is total rather than partial: every pairwise covariance is exactly zero (confirmed to machine precision at both the 21- and 99-dimensional scale, not merely small), so the covariance term contributes nothing by construction rather than by empirical accident. The accuracy difference there is correspondingly smaller and not significant ($R^2=0.556\pm0.030$ versus $0.590\pm0.066$, $p=0.302$). Sparse-by-construction observables are a genuine additional lever for reducing NISQ cost, but they sharpen rather than change the paper's central finding: whatever the covariance term contributes, it is not large enough to survive either measurement-efficient engineering choice.
+\paragraph{Secondary experiments.} We reran three further experiments from earlier development and report their status honestly. A synthetic six-class crystal-system task gives final accuracy 89.3\% (quantum-margin), 89.7\% (entropy), 79.3\% (random); quantum-margin ties entropy sampling, both beat random, a far more modest finding than an earlier claim of 91\% vs. 85\%. A transfer-learning experiment produced byte-identical trajectories for transfer and from-scratch conditions, indicating an implementation bug, not a finding. A multi-property optimization experiment gave near-zero $R^2$ throughout, indicating the loop is not learning effectively there; we mark it inconclusive. A spurious-correlation analysis, a deliberately synthetic study, ran successfully but is not load-bearing for our central claims.
 
 \section{Discussion}
 
-The ablation study and the first two fix attempts point to one specific diagnosis: the acquisition score, as originally specified, is computed independently of the downstream predictor. It depends only on a candidate's standardized features and the labeled pool's correlation matrix, never on the residuals or disagreement of a model trained on the labeled data. Every baseline that beats it measures predictive uncertainty directly.
+Two structurally unrelated attempts to make active-learning acquisition aware of cross-property correlation both failed to reliably beat directly measuring what the predictive model finds uncertain. The first, an analogy borrowing quantum-operator mathematics, never touched the downstream predictor's residuals at all; once we fixed that by coupling the state to ensemble disagreement, the method reached parity, but the fix worked because it became more like an ensemble-disagreement baseline, not because of anything quantum. The second, a joint expected-information-gain score derived directly from Bayesian decision theory, does incorporate real ensemble disagreement and comes with a provable relationship to its own classical-limit ablation, yet across four real, independently-measured property pairs it never significantly beats that ablation either. The measured total-correlation term is real and non-zero throughout, so the theorem is not vacuous on this data. It is simply too small, or the correlation available in genuinely available Materials Project property pairs too weak or too inconsistently expressed in ensemble epistemic uncertainty, to move a batch active-learning accuracy metric by a reliable, replicated amount at the sample sizes available here.
 
-The residual-coupled variant confirms this diagnosis. Once the state is built from ensemble disagreement instead of raw features, the method reaches parity with the best baseline on every task. But the second ablation shows this improvement has nothing to do with the quantum-inspired apparatus specifically. A bare quadratic form over per-tree predictions matches or beats the full covariance-aware, complex-coupled, multi-observable version on four of five tasks, and is markedly more stable on the fifth. What fixed the method was making it more like an ensemble-disagreement baseline, not anything quantum about it. The covariance coupling, non-commutativity, and complex coefficients that motivate this formalism remain, throughout every experiment we ran, either inert or mildly harmful.
+This converges on a claim stronger than either result alone: it is not merely that one specific construction (the quantum-operator analogy) failed to exploit multi-property correlation. A properly-derived, provably-correct alternative, built from ensemble disagreement rather than raw features from the start, tried on four independent real pairs rather than one, also failed to show a reliable gain from the correlation-aware term specifically, even though the correlation-aware term measures something real. The common failure point across both attempts is not the specific mathematics used to combine uncertainty sources. It is the assumption that combining sources at the acquisition-function level, after each source's uncertainty has already been separately estimated, recovers value that estimating uncertainty jointly, in the predictive model itself, would capture more directly. Multi-task Gaussian processes and shared-encoder neural networks model dependence between properties inside the predictor's architecture~\cite{rasmussen2006gaussian,snoek2012practical}; both formalisms tested here instead modeled it only in the score built on top of a predictor (or ensemble of predictors) that never itself represents the properties jointly. Our results are consistent with, though do not prove, the idea that this is where the real information about cross-property structure needs to live.
 
-Multi-task Gaussian processes and shared-encoder neural networks capture statistical dependence between properties through the predictive model's architecture itself~\cite{rasmussen2006gaussian,snoek2012practical}. The formalism we studied instead tried to capture dependence purely in the acquisition function, decoupled from the predictor. Our results suggest this decoupling is precisely the weakness: dependence-modeling that never touches the predictor does not obviously help select informative samples for that predictor.
+Several limitations apply to the joint-EIG result specifically. We used a random-forest ensemble's per-tree covariance as a proxy for the predictive posterior, not a full multi-output Bayesian model such as a multi-task Gaussian process; a model that represents joint uncertainty more faithfully might show a larger, more consistent effect. Four property pairs, five trials each (fewer for the smallest pair), is a modest evidence base; the two comparisons that reached borderline significance in one direction could still be a real, small effect visible only at larger sample sizes, and we did not run a formal power analysis to rule this out. We tested only regression pairs from a single feature pipeline (21 composition and structure descriptors); properties with a stronger physical coupling mechanism, or richer features, might show a cleaner effect. The quantum-inspired formalism's limitations, described in the original evaluation, still apply to Section~\ref{sec:quantum}: five real regression tasks rather than the six an earlier, unpublished version claimed, 21-dimensional rather than 100-dimensional features, nine acquisition baselines rather than full multi-output Gaussian processes or covariance-calibrated deep ensembles, and a circuit study that characterizes a simulator, not real hardware.
 
-The circuit realization work (Section~\ref{sec:hardware}) is best read as a separate contribution, not as evidence for or against the formalism's usefulness. It confirms the formalism is a genuine quantum construction, verified to floating-point precision against the classical closed form, and it quantifies what running it on near-term hardware would actually cost: hundreds of Pauli terms per quantity, growing combinatorially with the number of observables, mitigated but not eliminated by measurement grouping. None of this changes whether the formalism helps active learning; it characterizes the price of the construction the earlier sections already found does not pay for itself in accuracy.
+We conclude that, across two independent attempts, one an analogy and one a derivation, correlation-aware aggregation of multiple uncertainty sources at the acquisition-function level does not reliably outperform directly measuring ensemble disagreement in this real materials-discovery setting. The joint expected-information-gain score is, unlike the quantum-inspired construction, mathematically sound and correctly predicts its own null result: the total-correlation term it adds is provably non-negative and provably zero without real correlation, and what we measured empirically, a small, inconsistent effect exactly where that term is small, is precisely what the theorem allows rather than a contradiction of it. If cross-property structure is to genuinely improve active learning here, the evidence in this paper points toward building it into the predictive model itself, not the acquisition score layered on top of it.
 
-Several limitations apply. We evaluate five real regression tasks, not the six an earlier, unpublished version of this work claimed; thermal conductivity is not available at scale in the Materials Project, so we dropped it rather than simulating it. Our features are 21-dimensional, built from composition statistics and coarse structural summaries, not the 100-dimensional graph-neural-network embeddings a fuller pipeline might use. We compare against nine acquisition-strategy baselines; full multi-output Gaussian process and covariance-calibrated deep-ensemble baselines were not built here and are left for future work. Two of our four secondary experiments, transfer learning and multi-property optimization, have implementation issues and are not a basis for any claim. We use a single random-forest predictor throughout; a Gaussian-process or neural-network predictor might change these results. We tested three pre-specified architectural fixes and stopped once the pattern was consistent across five tasks; a larger search could in principle find a configuration that wins outright, at increasing risk of fitting noise in a five-task, five-trial evaluation. Parity is not superiority: readers should not read Table~\ref{tab:v3} as the method winning. Finally, the circuit study characterizes a simulator, not real hardware; crosstalk, readout error, decoherence, and calibration drift on an actual device would plausibly make the picture worse, not better.
+\section{Methods}\label{sec:methods}
 
-We conclude that reaching competitive performance required abandoning the paper's central novelty, covariance-aware aggregation over non-commuting observables, in favor of directly measuring model disagreement, which the winning classical baselines already do more simply and more robustly. If an acquisition function is to benefit from modeling multiple uncertainty sources jointly, it first needs to see what the predictor itself finds uncertain. The quantum-inspired covariance machinery studied here, at least as formalized, is not what does that work.
+\subsection{Joint expected information gain}\label{sec:methods-jeig}
 
-\section{Methods}
+For a random forest with $M$ trees fit on the current labeled set $(X_{\mathrm{train}}, Y_{\mathrm{train}})$, $Y_{\mathrm{train}}\in\mathbb{R}^{n\times K}$, we obtain per-tree predictions $f_1(x),\ldots,f_M(x)\in\mathbb{R}^K$ for each candidate $x$ and compute the empirical covariance $\Sigma_{\mathrm{pred}}(x) = \frac{1}{M-1}\sum_{m}(f_m(x)-\bar f(x))(f_m(x)-\bar f(x))^\top$. The residual variance $R=\mathrm{diag}(r_1,\ldots,r_K)$ is the out-of-bag prediction residual variance per task, computed once per active-learning iteration from the same forest (\texttt{oob\_score=True}). Equation~\ref{eq:jeig} and its Marginal-Sum ablation are implemented in \texttt{src/quantum\_al/joint\_eig.py}; the identity of Proposition~\ref{prop:jeig} is checked numerically in \texttt{tests/test\_joint\_eig.py} against 20 randomized $(K{=}3)$ and $(K{=}4)$ covariance matrices, to a tolerance of $10^{-8}$, and confirmed to be exactly zero (to $10^{-10}$) when $\Sigma_{\mathrm{pred}}$ is diagonal by construction.
 
-\subsection{Theoretical framework}
+\subsection{Real multi-property data pairs}\label{sec:methods-pairs}
 
-Let $x_i \in \mathbb{R}^d$ denote the standardized feature vector of candidate material $M_i$. We embed $x_i$ into a $d$-dimensional complex Hilbert space $\mathcal{H}_d$ via amplitude encoding.
+Each of the five real regression targets used in Section~\ref{sec:quantum} (band gap, formation energy, bulk modulus, magnetic moment, dielectric constant) was fetched independently from the Materials Project, so the five target files do not share a common set of materials. We inner-join every pair of target files on \texttt{material\_id} (\url{quantum_al.data_utils.load_multi_task}), keeping only materials with a computed value for both targets and confirming feature columns agree exactly for shared materials. Table~\ref{tab:pairs} reports the four pairs with enough shared-material overlap ($n\ge49$) to run a batch active-learning protocol; pairs with fewer than 10 shared materials (e.g. band gap/dielectric constant, $n=9$) were excluded as too small to test meaningfully.
 
-\begin{definition}[Quantum state of a material]\label{def:state}
-The quantum state of candidate $M_i$ is
+\subsection{Joint active-learning protocol}\label{sec:methods-jeig-protocol}
+
+For the two largest pairs we use the same protocol as Section~\ref{sec:methods-protocol}: 50 initial labeled samples, 8 iterations, batch size 15, 70/30 pool-test split, 5 trials (seeds 0-4). For the smallest pair (bulk modulus/dielectric constant, $n=49$), the default 50-sample seed would exceed the entire training pool, so we scale the protocol down: 15 initial samples, 5 iterations, batch size 3, same 70/30 split and 5 trials. At each iteration, the joint metric is $R^2$ per task on the held-out test set (\texttt{multioutput="raw\_values"}), averaged across the $K=2$ tasks. Paired two-sided $t$-tests compare final-iteration joint $R^2$ between Joint-EIG and each of Marginal-Sum and Random across the 5 trials, with Holm-Bonferroni correction across the two comparisons and a Shapiro-Wilk check on the paired differences. Full implementation in \url{benchmarks/run_joint_eig_experiment.py}; raw results in \url{results/joint_eig_experiment*.json}.
+
+\subsection{Quantum-inspired theoretical framework}\label{sec:methods-quantum}
+
+We operationalize $p_{ij}$ and $\phi_{ij}$ in Equation~\ref{eq:state} concretely: $p_{ij}=\mathrm{softmax}_j(x_{ij}^2)$, and $\phi_{ij}=\phi_j$, constant across candidates for a fixed labeled pool, is $\pi$ times the mean absolute Pearson correlation of feature $j$ with the other $d-1$ features, recomputed each iteration. The $K=3$ observables $\hat O_k=\sum_{i,j}w^{(k)}_{ij}|f_i\rangle\langle f_j|$ are each concentrated on a distinct, overlapping subset of feature indices, normalized to unit spectral norm; non-commutativity is guaranteed by construction and verified numerically every run. Variance is $\mathrm{Var}(\hat O_k;\psi_i)=\langle\psi_i|\hat O_k^2|\psi_i\rangle-\langle\psi_i|\hat O_k|\psi_i\rangle^2$; symmetrized covariance is $\mathrm{Cov}(\hat O_k,\hat O_l;\psi_i)=\langle\psi_i|\tfrac{\hat O_k\hat O_l+\hat O_l\hat O_k}{2}|\psi_i\rangle-\langle\psi_i|\hat O_k|\psi_i\rangle\langle\psi_i|\hat O_l|\psi_i\rangle$. The total score is
 \begin{equation}
-|\psi_i\rangle = \sum_{j=1}^{d} \alpha_{ij} |f_j\rangle, \label{eq:state}
+U_{\mathrm{total}}(M_i) = \sqrt{\sum_{k=1}^K |\alpha_k|^2 \mathrm{Var}(\hat{O}_k;\psi_i) + \sum_{\substack{k,l=1\\k\neq l}}^{K} \mathrm{Re}(\alpha_k^*\alpha_l)\,\mathrm{Cov}(\hat{O}_k,\hat{O}_l;\psi_i)}, \label{eq:utotal}
 \end{equation}
-where $\{|f_j\rangle\}_{j=1}^{d}$ is an orthonormal basis corresponding to feature dimensions and $\alpha_{ij} = \sqrt{p_{ij}}\, e^{i\phi_{ij}}$ satisfies $\sum_j |\alpha_{ij}|^2 = 1$.
-\end{definition}
-
-We operationalize $p_{ij}$ and $\phi_{ij}$ concretely, since the original design left this underspecified. $p_{ij} = \mathrm{softmax}_j(x_{ij}^2)$, so the normalization constraint holds by construction. $\phi_{ij} = \phi_j$, constant across candidates for a fixed labeled pool, is $\pi$ times the mean absolute Pearson correlation of feature $j$ with the other $d-1$ features, estimated over the current labeled set and recomputed at every active-learning iteration.
-
-We define $K$ Hermitian operators $\hat{O}_k : \mathcal{H}_d \to \mathcal{H}_d$,
-\begin{equation}
-\hat{O}_k = \sum_{i,j} w^{(k)}_{ij} |f_i\rangle\langle f_j|, \qquad \hat{O}_k = \hat{O}_k^\dagger, \label{eq:observable}
-\end{equation}
-with $K=3$ observables, structural, electronic, and thermodynamic, each concentrated via the weight matrix $W^{(k)}$ on a distinct, overlapping subset of feature indices, normalized to unit spectral norm. Non-commutativity is guaranteed by construction and verified numerically for every run.
-
-For each observable, the quantum variance of state $|\psi_i\rangle$ is
-\begin{equation}
-\mathrm{Var}(\hat{O}_k;\psi_i) = \langle\psi_i|\hat{O}_k^2|\psi_i\rangle - \langle\psi_i|\hat{O}_k|\psi_i\rangle^2. \label{eq:variance}
-\end{equation}
-Cross-observable coupling is the symmetrized covariance
-\begin{equation}
-\mathrm{Cov}(\hat{O}_k,\hat{O}_l;\psi_i) = \left\langle\psi_i\left|\tfrac{\hat{O}_k\hat{O}_l+\hat{O}_l\hat{O}_k}{2}\right|\psi_i\right\rangle - \langle\psi_i|\hat{O}_k|\psi_i\rangle\langle\psi_i|\hat{O}_l|\psi_i\rangle, \label{eq:covariance}
-\end{equation}
-which is guaranteed real by the symmetrization.
-
-\begin{definition}[Total uncertainty score]\label{def:total}
-Given complex coupling coefficients $\{\alpha_k\}_{k=1}^K \subset \mathbb{C}$, the covariance-aware acquisition score for candidate $M_i$ is
-\begin{equation}
-U_{\mathrm{total}}(M_i) = \sqrt{\sum_{k=1}^K |\alpha_k|^2 \mathrm{Var}(\hat{O}_k;\psi_i) + \sum_{\substack{k,l=1\\k\neq l}}^{K} \mathrm{Re}(\alpha_k^*\alpha_l)\,\mathrm{Cov}(\hat{O}_k,\hat{O}_l;\psi_i)}. \label{eq:utotal}
-\end{equation}
-\end{definition}
-Candidates are ranked by $U_{\mathrm{total}}$ and the top $b$ form the query batch.
-
-\begin{proposition}[Classical reduction]\label{prop:classical}
-If all observables commute, all coefficients are real, and the covariance terms are dropped, then $U_{\mathrm{total}}^2 \to \sum_{k=1}^K \alpha_k^2\, \mathrm{Var}(\hat{O}_k;\psi_i)$, a standard weighted-variance aggregator over independent observables.
-\end{proposition}
-
-Our implementation includes a numerical self-test verifying this reduction to floating-point precision, better than $10^{-9}$. Every expectation is a quadratic form, $\langle\psi|\hat{O}|\psi\rangle = \alpha^\dagger W \alpha$, costing $O(d^2)$ per observable for dense $W$. For $N$ candidates and $K$ observables, total complexity is $O(NKd^2)$, negligible in absolute terms for our experiment sizes ($N\lesssim1000$, $K=3$, $d=21$).
+with complex coupling coefficients $\{\alpha_k\}\subset\mathbb{C}$; candidates are ranked by $U_{\mathrm{total}}$ and the top $b$ form the query batch. Every expectation is a quadratic form, $O(d^2)$ per observable, giving $O(NKd^2)$ total complexity, negligible for our experiment sizes ($N\lesssim1000$, $K=3$, $d=21$).
 
 \subsection{Datasets}
 
-Every regression target is a genuine DFT-derived quantity pulled directly from the Materials Project via its public API~\cite{jain2013materials}. We use five real tasks: band gap (0.00 to 7.41 eV), formation energy per atom ($-4.41$ to $2.30$ eV/atom), bulk modulus (1.8 to 326.0 GPa), total magnetization (0.01 to 96.0 $\mu_B$), and total dielectric constant (1.3 to 1455.2), each with 1,000 materials before downstream filtering. Thermal conductivity is not included because it is not broadly available in the Materials Project at scale, so we chose to drop it rather than simulate it.
+Every regression target is a genuine DFT-derived quantity from the Materials Project public API~\cite{jain2013materials}: band gap (0.00-7.41 eV), formation energy per atom ($-4.41$ to $2.30$ eV/atom), bulk modulus (1.8-326.0 GPa), total magnetization (0.01-96.0 $\mu_B$), and total dielectric constant (1.3-1455.2), each with 1,000 materials before filtering. Thermal conductivity is not included; it is not broadly available in the Materials Project at scale. Features are 21-dimensional: 6 structural/summary descriptors (number of elements, density, volume per atom, site count, energy above hull, space-group number) from the Materials Project summary endpoint, plus 15 composition-derived statistics (mean, standard deviation, range) of electronegativity, atomic radius, atomic mass, periodic-table row, and periodic-table group. Continuous features are standardized to zero mean, unit variance, fit on the training pool.
 
-Features are 21-dimensional: six structural and summary descriptors, number of elements, density, volume per atom, site count, energy above hull, and space-group number, directly from the Materials Project summary endpoint, plus fifteen composition-derived statistics, mean, standard deviation, and range weighted over the constituent elements, of electronegativity, atomic radius, atomic mass, periodic-table row, and periodic-table group. All continuous features are standardized to zero mean and unit variance, fit on the training pool, before state encoding.
+\subsection{Baselines and protocol}\label{sec:methods-protocol}
 
-\subsection{Baselines and protocol}
+Nine acquisition strategies: Uncertainty Sampling (Gaussian-process posterior standard deviation), Query-by-Committee (five-model ensemble disagreement), Expected Improvement, Maximum Entropy (random-forest tree-prediction entropy proxy), Diversity Sampling ($k$-means), BADGE, CoreSet (greedy $k$-center), Random-Forest variance, and Random Sampling. Protocol: five trials (seeds 0-4), 70/30 pool-test split, 50 initial labeled samples, eight active-learning iterations, batch size 15, downstream predictor a 100-tree random forest retrained each iteration. Primary metrics are $R^2$ and mean absolute error on the held-out test split; paired two-sided $t$-tests with Holm-Bonferroni correction across nine baseline comparisons and a Shapiro-Wilk normality check on the band-gap task.
 
-We compare against nine acquisition strategies, each a working implementation: Uncertainty Sampling using Gaussian-process posterior standard deviation, Query-by-Committee using five-model ensemble disagreement, Expected Improvement, Maximum Entropy using a random-forest tree-prediction entropy proxy, Diversity Sampling using $k$-means, BADGE, CoreSet using greedy $k$-center selection, Random-Forest variance, and Random Sampling. We do not compare against full multi-output Gaussian processes or covariance-calibrated deep ensembles; these were not implemented and are left for future work.
+\subsection{Residual-coupled variant}\label{sec:methods-v3}
 
-The protocol is five independent trials, seeds 0 through 4, a 70/30 pool-test split, 50 initial labeled samples drawn uniformly at random, eight active-learning iterations, and a batch size of 15. The downstream predictor is a random forest with 100 trees, retrained from scratch each iteration. Primary metrics are $R^2$ and mean absolute error on the held-out test split. Paired two-sided $t$-tests compare final-iteration $R^2$ across the five trials, with Holm-Bonferroni correction across the nine baseline comparisons and a Shapiro-Wilk normality check on the paired differences.
+We fit a random forest with 99 trees on the current labeled set, collect each candidate's vector of 99 per-tree predictions, standardize this vector across the candidate pool, and encode it via Equation~\ref{eq:state} in place of raw features. The 99 trees split into three equal-size groups serving as the three observables; the variance, covariance, and complex-coupling machinery above applies unmodified on this new basis.
 
-\subsection{Residual-coupled variant}
+\subsection{Quantum circuit implementation}\label{sec:methods-circuit}
 
-For the fix described in Results, we fit a random forest with 99 trees on the current labeled set, collect each candidate's vector of 99 per-tree predictions, standardize this vector across the candidate pool using the training pool's statistics, and encode it as the quantum state via Equation~\ref{eq:state} in place of the raw material features. The 99 trees are split into three equal-size groups that serve as the three observables; there is no structural, electronic, or thermodynamic interpretation once the basis is tree predictions rather than material descriptors. The variance, covariance, and complex-coupling machinery of Equations~\ref{eq:variance} to \ref{eq:utotal} is applied unmodified on top of this new basis.
-
-\subsection{Quantum circuit implementation}
-
-We implemented the formalism as an actual quantum circuit using Qiskit and Qiskit Aer. Each candidate's feature vector, of dimension $d=21$, is amplitude-encoded onto $n=\lceil\log_2 d\rceil=5$ qubits, zero-padded to dimension 32, via a state-preparation circuit. Each observable, correspondingly zero-padded, is decomposed into a sum of Pauli strings via exact trace-based projection; we found that Qiskit's default \texttt{SparsePauliOp.from\_operator} silently truncates small coefficients, introducing a discrepancy of about $10^{-5}$ against the classical formula until called with explicit zero tolerance. In the noiseless, exact-statevector limit, we verified the circuit-measured variance and covariance match the classical values to better than $10^{-9}$.
-
-For finite-shot simulation, we used Qiskit Aer's estimator with a target precision of $1/\sqrt{\text{shots}}$, at shot budgets of $10^2$, $10^3$, $10^4$, and $10^5$, on 30 real band-gap candidates drawn from the standardized pool. For noise sensitivity, we added a standard depolarizing noise model with one-qubit gate error $p_1=0.1\%$ and two-qubit gate error $p_2=1\%$ at 10,000 shots. For measurement grouping, we applied Qiskit's qubit-wise-commuting and full-commuting grouping to the Pauli decomposition of every variance and covariance quantity in the $K=3$ observable bank.
+We implemented the formalism as an actual Qiskit/Qiskit Aer circuit. Each $d=21$ feature vector is amplitude-encoded onto $n=\lceil\log_2 d\rceil=5$ qubits, zero-padded to dimension 32. Each observable is decomposed into Pauli strings via exact trace-based projection, called with explicit zero tolerance (Qiskit's default \texttt{SparsePauliOp.from\_operator} silently truncates small coefficients, introducing a $\sim10^{-5}$ discrepancy otherwise). In the exact-statevector limit, circuit-measured variance and covariance match the classical values to better than $10^{-9}$. For finite-shot simulation we used Qiskit Aer's estimator at shot budgets $10^2$-$10^5$ on 30 real band-gap candidates, and a depolarizing noise model with one-qubit error $0.1\%$, two-qubit error $1\%$, at 10,000 shots. Measurement grouping used Qiskit's qubit-wise-commuting and full-commuting grouping on the Pauli decomposition of every variance/covariance quantity in the $K=3$ bank.
 
 \section*{Data availability}
 The Materials Project data used here can be regenerated from the public Materials Project API using the script \url{src/quantum_al/fetch_data.py}; see \url{data/README.md}. Raw results underlying every table and figure are in the \texttt{results/} directory of the code repository.
 
 \section*{Code availability}
-All code, including the quantum-inspired formalism, the classical benchmark suite, the residual-coupled variant, and the quantum circuit implementation, is available at \url{https://github.com/arnavk23/Quantum-active-learning}.
+All code, including both acquisition-score formalisms, the classical benchmark suite, the residual-coupled variant, and the quantum circuit implementation, is available at \url{https://github.com/arnavk23/Quantum-active-learning}.
 
 \section*{Competing interests}
 The author declares no competing interests.

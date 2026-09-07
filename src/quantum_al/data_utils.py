@@ -60,6 +60,41 @@ def load_task(name, drop_na=True):
     return X, y, meta
 
 
+def load_multi_task(names, drop_na=True):
+    """(X, Y, meta) for several regression tasks, inner-joined on
+    material_id so every row has real labels for all K tasks (feature
+    columns are identical across task files for a shared material_id).
+    Y has shape (n, len(names))."""
+    per_task = {}
+    for name in names:
+        path = os.path.join(DATA_DIR, f"{name}.json")
+        with open(path, "r") as f:
+            rows = json.load(f)
+        per_task[name] = {
+            r["material_id"]: r for r in rows
+            if r.get("target") is not None
+            and not (drop_na and any(r.get(c) is None for c in FEATURE_COLUMNS))
+        }
+
+    common_ids = set.intersection(*(set(d) for d in per_task.values()))
+    common_ids = sorted(common_ids)
+
+    X_list, Y_list, meta = [], [], []
+    for mid in common_ids:
+        row0 = per_task[names[0]][mid]
+        X_list.append([row0.get(c, np.nan) for c in FEATURE_COLUMNS])
+        Y_list.append([per_task[n][mid]["target"] for n in names])
+        meta.append({
+            "material_id": mid,
+            "formula_pretty": row0.get("formula_pretty"),
+            "crystal_system": row0.get("crystal_system"),
+        })
+
+    X = np.asarray(X_list, dtype=float)
+    Y = np.asarray(Y_list, dtype=float)
+    return X, Y, meta
+
+
 def standardize(X_train, *others):
     """Fit mean/std on X_train, apply to X_train and any other arrays."""
     mu = X_train.mean(axis=0)
