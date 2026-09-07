@@ -1,5 +1,5 @@
 ---
-title: 'quantum_al: a reproducible harness for benchmarking correlation-aware active-learning acquisition functions on real materials data'
+title: 'quantum_al: correlation-aware active learning for materials discovery'
 tags:
   - Python
   - active learning
